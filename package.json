@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node ./src/main.ts"
+    "start": "ts-node ./src/main.ts",
+    "start:prod": "node dist/main.ts",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
@@ -18,7 +20,7 @@
     "bs58": "^5.0.0",
     "ethers": "^5.7.2",
     "fs": "^0.0.1-security",
-    "relayer-engine": "../../relayer-engine",
+    "relayer-engine": "wormhole-foundation/relayer-engine",
     "winston": "^3.8.2"
   },
   "devDependencies": {

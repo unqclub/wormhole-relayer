@@ -1,11 +1,11 @@
 import { Logger } from "winston";
-import * as relayerEngine from "../../relayer-engine";
+import * as relayerEngine from "relayer-engine";
 import {
   UnqPluginDefinition,
   UnqRelayerPluginConfig,
-  XDappConfig,
 } from "./plugin/unq_plugin";
-import { CommonPluginEnv, EnvType, StoreType } from "../../relayer-engine";
+
+import { EnvType, StoreType } from "relayer-engine";
 export const main = async () => {
   const pluginConfig = (await relayerEngine.loadFileAndParseToObject(
     `./unqPluginConfig.json`
@@ -13,13 +13,14 @@ export const main = async () => {
 
   const relayerConfig = {
     logLevel: "info",
-    redisHost: "localhost",
-    redisPort: 6379,
-    // promPort: 1340,
+    redis: {
+      port: 6379,
+      host: "localhost",
+    },
     readinessPort: 2000,
     envType: EnvType.LOCALHOST,
     mode: relayerEngine.Mode.BOTH,
-    storeType: StoreType.InMemory,
+    storeType: StoreType.Redis,
     supportedChains: Object.entries(pluginConfig.xDappConfig.networks).map(
       ([networkName, network]) => {
         return {
@@ -30,6 +31,8 @@ export const main = async () => {
         };
       }
     ),
+    wormholeRpc: "",
+    defaultWorkflowOptions: { maxRetries: 3 },
   };
   const plugin = new UnqPluginDefinition().init(pluginConfig);
 
@@ -52,5 +55,5 @@ export const main = async () => {
 };
 
 main().catch((err) => {
-  // console.log(err);
+  console.log(err);
 });

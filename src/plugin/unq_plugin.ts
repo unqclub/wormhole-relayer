@@ -10,7 +10,8 @@ import {
   SolanaWallet,
   StagingAreaKeyLock,
   Workflow,
-} from "../../../relayer-engine";
+  WorkflowOptions,
+} from "relayer-engine";
 import { Logger } from "winston";
 import {
   TransactionInstruction,
@@ -19,15 +20,13 @@ import {
 } from "@solana/web3.js";
 import wormholeAbi from "../abi/WormholeUnq.json";
 import * as wormholeSdk from "@certusone/wormhole-sdk";
-import { PluginDefinition } from "../../../relayer-engine";
+import { PluginDefinition } from "relayer-engine";
 import { ethers } from "ethers";
 import {
   ChainId,
   CHAIN_ID_ETH,
   CHAIN_ID_SOLANA,
-  hexToUint8Array,
   parseVaa,
-  tryNativeToHexString,
 } from "@certusone/wormhole-sdk";
 import { emitMessageOnSolana } from "../helpers/solana/methods";
 import pluginConf from "../../unqPluginConfig.json";
@@ -62,7 +61,7 @@ export interface XDappConfig {
   };
 }
 
-export class UnqPlugin implements Plugin<VAA> {
+export class UnqPlugin implements Plugin<any> {
   pluginName: string = "UnqPlugin";
   pluginConfig: any;
   shouldSpy: boolean = true;
@@ -75,12 +74,27 @@ export class UnqPlugin implements Plugin<VAA> {
     private readonly appConfig: UnqRelayerPluginConfig,
     readonly logger: Logger
   ) {}
+  maxRetries?: number | undefined;
+  consumeEvent(
+    vaa: ParsedVaaWithBytes,
+    stagingArea: StagingAreaKeyLock,
+    providers: Providers,
+    extraData?: any[] | undefined
+  ): Promise<
+    | { workflowData: string; workflowOptions?: WorkflowOptions | undefined }
+    | undefined
+  > {
+    return Promise.resolve({
+      workflowData: vaa.bytes.toString("base64"),
+      chainID: vaa.emitterChain,
+    });
+  }
 
   afterSetup?(
     _providers: Providers,
     _listenerResources?: { eventSource: EventSource; db: StagingAreaKeyLock }
   ): Promise<void> {
-    return;
+    return new Promise((resolve) => resolve());
   }
 
   getFilters(): ContractFilter[] {
@@ -89,17 +103,6 @@ export class UnqPlugin implements Plugin<VAA> {
     return filters;
   }
 
-  consumeEvent(
-    vaa: ParsedVaaWithBytes,
-    _stagingArea: StagingAreaKeyLock,
-    _providers: Providers,
-    _extraData?: any[]
-  ): Promise<{ workflowData?: any; chainID: number }> {
-    return Promise.resolve({
-      workflowData: vaa.bytes,
-      chainID: vaa.emitterChain,
-    });
-  }
   async handleWorkflow(
     workflow: Workflow<any>,
     providers: Providers,
@@ -135,14 +138,18 @@ export class UnqPlugin implements Plugin<VAA> {
 export class UnqPluginDefinition
   implements PluginDefinition<UnqRelayerPluginConfig, UnqPlugin>
 {
-  init(pluginConfig: any): { fn: EngineInitFn<UnqPlugin>; pluginName: string } {
+  init(pluginConfig: any): {
+    fn: EngineInitFn<UnqPlugin>;
+    pluginName: string;
+  } {
     return {
-      fn: (env, logger) => {
-        return new UnqPlugin(env, pluginConfig, logger);
-      },
       pluginName: UnqPlugin.plugin,
+      fn: (engineConfig, logger) => {
+        return new UnqPlugin(engineConfig, pluginConfig, logger);
+      },
     };
   }
+
   pluginName: string;
 }
 

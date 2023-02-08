@@ -1,0 +1,22 @@
+version: '3.7'
+services:
+  relayer:
+    build:
+      context: .
+    container_name: unq_relayer
+    image: wormhole-relayer
+    networks:
+      - unq-relayer-network
+    ports:
+      - 3003:3003
+    command: npm run start:prod
+    depends_on:
+    - redis
+  redis:
+    image: debian:bullseye-slim
+    ports:
+      - 6379:6379
+networks:
+  unq-relayer-network:
+    driver: bridge
+    

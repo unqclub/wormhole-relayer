@@ -1,7 +1,6 @@
 import { bs58 } from "@project-serum/anchor/dist/cjs/utils/bytes";
 import { ethers } from "ethers";
 import {} from "bs58";
-import messengerAbi from "../abi/messenger.json";
 import { getEmitterAddressEth } from "@certusone/wormhole-sdk";
 export async function getMessengerStat() {
   // const network = new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545");
