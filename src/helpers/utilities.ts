@@ -2,7 +2,7 @@ import { NodeWallet } from "@certusone/wormhole-sdk/lib/cjs/solana";
 import { AnchorProvider, Program, Wallet } from "@project-serum/anchor";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
-import { IDL, WormholeSol } from "../idl/wormhole_sol";
+import { IDL, ClubProgram } from "../idl/club_program";
 export const solanaEmitterAddress = process.env.EMITTER_ADDRESS;
 
 export const getDeserializationSchema = () => {
@@ -32,7 +32,7 @@ export class MessageDto {
 export const connection = new Connection("http://127.0.0.1:8899");
 
 export const wormholeProgram = () => {
-  return new Program<WormholeSol>(
+  return new Program<ClubProgram>(
     IDL,
     "8QS89n567dJk829iueJdxFUeqFkVjRBPU3w674BGmB8m",
     new AnchorProvider(connection, new Wallet(Keypair.generate()), {
