@@ -171,10 +171,6 @@ async function submitOnEnv(
   wormholeUnqContract.on(
     "TreasuryCreatedEvent",
     async (realm, authority, parsedDenominatedCurrency, treasuryAddress) => {
-      console.log("REALM:", realm);
-      console.log("AUTHORITY:", authority);
-      console.log("PARSED DENN:", parsedDenominatedCurrency);
-
       const treasuryContract = new ethers.Contract(
         treasuryAddress,
         treasuryAbi.abi,
@@ -183,7 +179,28 @@ async function submitOnEnv(
 
       const denominatedCurrency =
         await treasuryContract.getDenominatedCurrency();
-      console.log("DENOMINATED CURRENCY:", denominatedCurrency);
+
+      treasuryContract.on("MemberAddedEvent", (memberData) => {
+        console.log(memberData);
+      });
+    }
+  );
+
+  wormholeUnqContract.on(
+    "MemberEvent",
+    async (realmAddress, solanaAddress, ethAddress) => {
+      console.log(realmAddress, "REALM");
+      console.log(solanaAddress, "SOLANA");
+      console.log(ethAddress, "ETH");
+      const treasuryAddress = await wormholeUnqContract.getTreasury(
+        realmAddress
+      );
+      const treasuryContract = new ethers.Contract(
+        treasuryAddress,
+        treasuryAbi.abi,
+        network
+      );
+      const memberData = await treasuryContract.getMemberData(solanaAddress);
     }
   );
 }
