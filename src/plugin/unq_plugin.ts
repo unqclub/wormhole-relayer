@@ -167,25 +167,6 @@ async function submitOnEnv(
     },
   });
   await tx.wait();
-
-  wormholeUnqContract.on(
-    "TreasuryCreatedEvent",
-    async (realm, authority, parsedDenominatedCurrency, treasuryAddress) => {
-      console.log("REALM:", realm);
-      console.log("AUTHORITY:", authority);
-      console.log("PARSED DENN:", parsedDenominatedCurrency);
-
-      const treasuryContract = new ethers.Contract(
-        treasuryAddress,
-        treasuryAbi.abi,
-        network
-      );
-
-      const denominatedCurrency =
-        await treasuryContract.getDenominatedCurrency();
-      console.log("DENOMINATED CURRENCY:", denominatedCurrency);
-    }
-  );
 }
 
 export const submitOnSolana = async (vaa: any, executor: ActionExecutor) => {

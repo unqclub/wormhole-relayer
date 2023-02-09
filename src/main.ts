@@ -19,7 +19,7 @@ export const main = async () => {
     readinessPort: 2000,
     envType: EnvType.LOCALHOST,
     mode: relayerEngine.Mode.BOTH,
-    storeType: StoreType.Redis,
+    storeType: StoreType.InMemory,
     supportedChains: Object.entries(pluginConfig.xDappConfig.networks).map(
       ([networkName, network]) => {
         return {
