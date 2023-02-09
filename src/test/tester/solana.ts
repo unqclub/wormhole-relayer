@@ -8,13 +8,18 @@ import {
 } from "@solana/web3.js";
 import { ClubProgram } from "../../idl/club_program";
 import {
+  accountGovernanceSeed,
   governanceSeed,
   ogSplGovernance,
+  profitSeed,
   realmConfigSeed,
   sendTransaction,
   splGovernanceProgram,
+  treasuryDataSeed,
+  treasurySeed,
   unqClubMemberSeed,
   unqClubSeed,
+  voterWeightSeed,
 } from "../helpers";
 import * as anchor from "@project-serum/anchor";
 import * as SplGovernance from "@solana/spl-governance";
@@ -145,8 +150,102 @@ export const createClub = async (
 
     await sendTransaction(connection, createRealmIx, [payer], payer);
 
-    return clubAddress;
+    return {
+      clubAddress: clubAddress,
+      realmAddress: realmAddress,
+      memberAddress: memberAddress,
+      tokenOwnerRecord: tokenOwnerRecord,
+    };
   } catch (error) {
     console.log(error);
   }
+};
+
+export const updateVoterWeightIx = async (
+  program: Program<ClubProgram>,
+  realmAddress: PublicKey,
+  memberData: PublicKey,
+  clubData: PublicKey,
+  payer: Keypair
+) => {
+  const [voterWeightAddress] = await PublicKey.findProgramAddress(
+    [unqClubSeed, clubData.toBuffer(), voterWeightSeed, memberData.toBuffer()],
+    program.programId
+  );
+
+  const ix = await program.methods
+    .updateVoterWeightForGovernance()
+    .accounts({
+      realm: realmAddress,
+      voterWeightRecord: voterWeightAddress,
+      memberData: memberData,
+      clubData: clubData,
+      payer: payer.publicKey,
+      systemProgram: anchor.web3.SystemProgram.programId,
+    })
+    .instruction();
+
+  return { ix, voterWeightAddress };
+};
+
+export const createGovernance = async (
+  program: Program<ClubProgram>,
+  clubAddress: PublicKey,
+  realmAddress: PublicKey,
+  payer: Keypair,
+  memberData: PublicKey,
+  tokenOwnerRecord: PublicKey,
+  voterWeightAddress: PublicKey
+) => {
+  const [realmConfigAddress] = PublicKey.findProgramAddressSync(
+    [realmConfigSeed, realmAddress.toBuffer()],
+    splGovernanceProgram
+  );
+
+  const treasuryIndex = 1;
+  let treasuryIndexBuffer = Buffer.alloc(4);
+
+  const [treasuryPda] = PublicKey.findProgramAddressSync(
+    [unqClubSeed, clubAddress.toBuffer(), treasurySeed, treasuryIndexBuffer],
+    program.programId
+  );
+
+  const [treasuryDataPda] = PublicKey.findProgramAddressSync(
+    [unqClubSeed, treasuryPda.toBuffer(), treasuryDataSeed],
+    program.programId
+  );
+
+  const [profitPda] = PublicKey.findProgramAddressSync(
+    [unqClubSeed, treasuryPda.toBuffer(), profitSeed],
+    program.programId
+  );
+
+  const [accountGovernancePda] = PublicKey.findProgramAddressSync(
+    [accountGovernanceSeed, realmAddress.toBuffer(), treasuryPda.toBuffer()],
+    splGovernanceProgram
+  );
+
+  const createGovernanceIX = await program.methods
+    .createTreasuryGovernance(15, 55, [], null)
+    .accounts({
+      treasuryData: treasuryDataPda,
+      clubData: clubAddress,
+      splGovernanceProgram: splGovernanceProgram,
+      realm: realmAddress,
+      realmConfig: realmConfigAddress,
+      realmAuthority: payer.publicKey,
+      payer: payer.publicKey,
+      tokenOwnerRecord: tokenOwnerRecord,
+      governance: accountGovernancePda,
+      voterWeightRecord: voterWeightAddress,
+      treasury: treasuryPda,
+      profit: profitPda,
+      memberData: memberData,
+      systemProgram: anchor.web3.SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .instruction();
+
+  return createGovernanceIX;
 };

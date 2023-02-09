@@ -5,8 +5,13 @@ import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import * as ethers from "ethers";
 import pluginConfig from "../../unqPluginConfig.json";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
-import { createClub } from "./tester/solana";
+import {
+  createClub,
+  createGovernance,
+  updateVoterWeightIx,
+} from "./tester/solana";
 import shortUUID from "short-uuid";
+import { sendTransaction } from "./helpers";
 
 describe("it should create club with treasury on ethereum", async () => {
   const SOLANA_RPC_CONNECTION = new Connection("http://127.0.0.1:8899");
@@ -16,6 +21,10 @@ describe("it should create club with treasury on ethereum", async () => {
       JSON.parse(pluginConfig.xDappConfig.networks["sol0"].privateKey)
     )
   );
+  let clubPda: PublicKey;
+  let memberPda: PublicKey;
+  let tokenOwnerRecordPda: PublicKey;
+  let realmPda: PublicKey;
 
   const clubProgram = new Program<ClubProgram>(
     IDL,
@@ -33,15 +42,44 @@ describe("it should create club with treasury on ethereum", async () => {
     ETH_RPC_CONNECTION
   );
 
-  let clubAddress: PublicKey;
-
-  it("should create club on solana", async () => {
-    try {
-      clubAddress = await createClub(
+  it("should create club", async () => {
+    const { clubAddress, memberAddress, realmAddress, tokenOwnerRecord } =
+      await createClub(
         "UNQW" + shortUUID.generate(),
         clubProgram,
         wallet,
         SOLANA_RPC_CONNECTION
+      );
+    clubPda = clubAddress;
+    realmPda = realmAddress;
+    memberPda = memberAddress;
+    tokenOwnerRecordPda = tokenOwnerRecord;
+  });
+
+  it("should create treasury governance", async () => {
+    const { voterWeightAddress, ix } = await updateVoterWeightIx(
+      clubProgram,
+      realmPda,
+      memberPda,
+      clubPda,
+      wallet
+    );
+    const createGovIx = await createGovernance(
+      clubProgram,
+      clubPda,
+      realmPda,
+      wallet,
+      memberPda,
+      tokenOwnerRecordPda,
+      voterWeightAddress
+    );
+
+    try {
+      await sendTransaction(
+        SOLANA_RPC_CONNECTION,
+        [ix, createGovIx],
+        [wallet],
+        wallet
       );
     } catch (error) {
       console.log(error);

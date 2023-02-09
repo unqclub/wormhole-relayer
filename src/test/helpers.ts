@@ -13,6 +13,11 @@ export const governanceSeed = Buffer.from("governance");
 export const unqClubSeed = Buffer.from("unq-club");
 export const unqClubMemberSeed = Buffer.from("member");
 export const realmConfigSeed = Buffer.from("realm-config");
+export const voterWeightSeed = Buffer.from("voter-weight-record");
+export const treasuryDataSeed = Buffer.from("treasury-data");
+export const treasurySeed = Buffer.from("treasury");
+export const profitSeed = Buffer.from("profit");
+export const accountGovernanceSeed = Buffer.from("account-governance");
 
 export const splGovernanceProgram = new PublicKey(
   "UNQgUq3jtWnEmQraenUckLda9ueYzNc2uywWVPcMC4D"
