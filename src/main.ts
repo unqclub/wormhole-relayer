@@ -31,7 +31,7 @@ export const main = async () => {
         };
       }
     ),
-    wormholeRpc: "",
+    wormholeRpc: "http://127.0.0.1:7070",
     defaultWorkflowOptions: { maxRetries: 3 },
   };
   const plugin = new UnqPluginDefinition().init(pluginConfig);

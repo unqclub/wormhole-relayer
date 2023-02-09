@@ -1,5 +1,5 @@
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
-import { SolanaWallet } from "../../../../relayer-engine/relayer-engine/lib";
+import { SolanaWallet } from "relayer-engine";
 import { wormholeProgram } from "../utilities";
 
 export async function emitMessageOnSolana(payload: Buffer, wallet: Keypair) {
