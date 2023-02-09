@@ -204,6 +204,7 @@ export const createGovernance = async (
 
   const treasuryIndex = 1;
   let treasuryIndexBuffer = Buffer.alloc(4);
+  treasuryIndexBuffer.writeUint8(treasuryIndex);
 
   const [treasuryPda] = PublicKey.findProgramAddressSync(
     [unqClubSeed, clubAddress.toBuffer(), treasurySeed, treasuryIndexBuffer],

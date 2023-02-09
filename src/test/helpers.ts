@@ -15,6 +15,7 @@ export const unqClubMemberSeed = Buffer.from("member");
 export const realmConfigSeed = Buffer.from("realm-config");
 export const voterWeightSeed = Buffer.from("voter-weight-record");
 export const treasuryDataSeed = Buffer.from("treasury-data");
+export const financialRecordSeed = Buffer.from("financial-record");
 export const treasurySeed = Buffer.from("treasury");
 export const profitSeed = Buffer.from("profit");
 export const accountGovernanceSeed = Buffer.from("account-governance");
