@@ -25,14 +25,11 @@ import {
   ChainId,
   CHAIN_ID_ETH,
   CHAIN_ID_SOLANA,
-  hexToUint8Array,
   parseVaa,
-  tryNativeToHexString,
 } from "@certusone/wormhole-sdk";
 import { emitMessageOnSolana } from "../helpers/solana/methods";
 import pluginConf from "../../unqPluginConfig.json";
 import treasuryAbi from "../abi/UnqTreasury.json";
-import { wormholeProgram } from "../helpers/utilities";
 type VAA = string;
 
 export interface UnqRelayerPluginConfig {
