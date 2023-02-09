@@ -1,46 +1,55 @@
-import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
+import { ParsedVaa, tryUint8ArrayToNative } from "@certusone/wormhole-sdk";
+import {
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  AccountMeta,
+} from "@solana/web3.js";
 import { SolanaWallet } from "../../../../relayer-engine/relayer-engine/lib";
-import { wormholeProgram } from "../utilities";
+import { WormholePayloadAction, wormholeProgram } from "../utilities";
 
-export async function emitMessageOnSolana(payload: Buffer, wallet: Keypair) {
+export async function emitMessageOnSolana(
+  vaa: Buffer,
+  wallet: Keypair,
+  parsedVaa: ParsedVaa
+) {
   try {
     const wormholeSolProgram = wormholeProgram();
 
-    const [message] = PublicKey.findProgramAddressSync(
-      [Buffer.from("message"), wallet.publicKey.toBuffer()],
-      wormholeSolProgram.programId
-    );
+    const payload = parsedVaa.payload;
 
-    console.log(payload.toString("utf-8"), "MESSAGE FROM ETHEREUM");
-
-    const ix = await wormholeSolProgram.methods
-      .receiveWormholeMessage(payload)
+    const receiveWormholeMessageIx = await wormholeSolProgram.methods
+      .receiveWormholeMessage(vaa)
       .accounts({
         payer: wallet.publicKey,
         systemProgram: SystemProgram.programId,
-        message,
       })
       .instruction();
 
-    return ix;
+    return receiveWormholeMessageIx;
   } catch (error) {
     throw error;
   }
 }
 
-export async function fetchNewestMessage(wallet: SolanaWallet) {
-  try {
-    const wormholeSolProgram = wormholeProgram();
+export const getInstructionDataAndRemainingAccounts = (payload: Buffer) => {
+  const action = payload[0] as WormholePayloadAction;
 
-    const [message] = PublicKey.findProgramAddressSync(
-      [Buffer.from("message"), wallet.payer.publicKey.toBuffer()],
-      wormholeSolProgram.programId
-    );
-    const messageAccount = await wormholeSolProgram.account.messageData.fetch(
-      message
-    );
-    console.log("MESSAGE", messageAccount);
-  } catch (error) {
-    console.log(error);
+  const remainingAccounts: AccountMeta[] = [];
+
+  switch (action) {
+    case WormholePayloadAction.DepositEvent: {
+      const rawClubAddress = payload.subarray(1, 33);
+      const clubAddress = new PublicKey(
+        tryUint8ArrayToNative(rawClubAddress, "solana")
+      );
+      const rawMemberAddress = payload.subarray(33, 55);
+      const memberPubkey = new PublicKey(
+        tryUint8ArrayToNative(rawMemberAddress, "solana")
+      );
+      const depositAmount = payload
+        .subarray(55, payload.length)
+        .readBigInt64BE(0);
+    }
   }
-}
+};

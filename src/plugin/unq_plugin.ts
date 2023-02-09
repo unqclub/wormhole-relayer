@@ -25,6 +25,7 @@ import {
   ChainId,
   CHAIN_ID_ETH,
   CHAIN_ID_SOLANA,
+  ParsedVaa,
   parseVaa,
 } from "@certusone/wormhole-sdk";
 import { emitMessageOnSolana } from "../helpers/solana/methods";
@@ -117,7 +118,7 @@ export class UnqPlugin implements Plugin<VAA> {
         break;
       }
       case CHAIN_ID_ETH: {
-        await submitOnSolana(parsedVaa.payload, execute);
+        await submitOnSolana(parsedVaa, execute, vaa);
         break;
       }
       default: {
@@ -169,10 +170,17 @@ async function submitOnEnv(
   await tx.wait();
 }
 
-export const submitOnSolana = async (vaa: any, executor: ActionExecutor) => {
+export const submitOnSolana = async (
+  vaa: ParsedVaa,
+  executor: ActionExecutor,
+  rawVaa: Buffer
+) => {
   await executor.onSolana(async ({ wallet }) => {
     return Promise.resolve(
-      realyIxOnSolana(await emitMessageOnSolana(vaa, wallet.payer), wallet)
+      realyIxOnSolana(
+        await emitMessageOnSolana(rawVaa, wallet.payer, vaa),
+        wallet
+      )
     );
   });
 };
