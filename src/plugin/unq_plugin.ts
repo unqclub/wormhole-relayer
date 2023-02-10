@@ -30,7 +30,6 @@ import {
 } from "@certusone/wormhole-sdk";
 import { emitMessageOnSolana } from "../helpers/solana/methods";
 import pluginConf from "../../unqPluginConfig.json";
-import treasuryAbi from "../abi/UnqTreasury.json";
 type VAA = string;
 
 export interface UnqRelayerPluginConfig {

@@ -68,6 +68,8 @@ export const getInstructionRemainingAccounts = (
       const memberPubkey = new PublicKey(
         tryUint8ArrayToNative(rawMemberAddress, "solana")
       );
+      const depositAmount = payload.subarray(65);
+      console.log(depositAmount.reverse().readUint32LE(), "DEP AM");
 
       const treasuryIndex = 1;
       let treasuryIndexBuffer = Buffer.alloc(4);
