@@ -66,3 +66,5 @@ export async function sendTransaction(
 export const getEthereumHexFormat = (address: string): string => {
   return "0x" + address;
 };
+
+export const zeroAddres = "0x0000000000000000000000000000000000000000";

@@ -19,6 +19,7 @@ import {
   getTreasuryContract,
   sendTransaction,
   unqClubSeed,
+  zeroAddres,
 } from "./helpers";
 import { hexToUint8Array, tryNativeToHexString } from "@certusone/wormhole-sdk";
 import unqPlugin from "../../unqPluginConfig.json";
@@ -93,7 +94,7 @@ describe("it should create club with treasury on ethereum", async () => {
       memberPda,
       tokenOwnerRecordPda,
       voterWeightAddress,
-      "0x00000000000000000000000000000000"
+      zeroAddres
     );
     treasuryData = treasuryDataPda;
 
