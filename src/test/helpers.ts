@@ -62,3 +62,7 @@ export async function sendTransaction(
 
   return txSignature;
 }
+
+export const getEthereumHexFormat = (address: string): string => {
+  return "0x" + address;
+};

@@ -273,6 +273,12 @@ export type ClubProgram = {
           type: {
             option: "u64";
           };
+        },
+        {
+          name: "crossChainDenominatedCurrency";
+          type: {
+            option: "string";
+          };
         }
       ];
     },
@@ -5125,6 +5131,12 @@ export type ClubProgram = {
                 defined: "ReservedRights";
               };
             };
+          },
+          {
+            name: "crossChainDenominatedCurrency";
+            type: {
+              option: "string";
+            };
           }
         ];
       };
@@ -6434,14 +6446,22 @@ export type ClubProgram = {
           {
             name: "DepositPayload";
             fields: [
-              "u8",
               {
-                array: ["u8", 32];
+                name: "club_data";
+                type: {
+                  array: ["u8", 32];
+                };
               },
               {
-                array: ["u8", 32];
+                name: "member_address";
+                type: {
+                  array: ["u8", 32];
+                };
               },
-              "u64"
+              {
+                name: "deposit_amount";
+                type: "u32";
+              }
             ];
           }
         ];
@@ -7723,6 +7743,12 @@ export const IDL: ClubProgram = {
           name: "nftMaxVoterWeight",
           type: {
             option: "u64",
+          },
+        },
+        {
+          name: "crossChainDenominatedCurrency",
+          type: {
+            option: "string",
           },
         },
       ],
@@ -12577,6 +12603,12 @@ export const IDL: ClubProgram = {
               },
             },
           },
+          {
+            name: "crossChainDenominatedCurrency",
+            type: {
+              option: "string",
+            },
+          },
         ],
       },
     },
@@ -13885,14 +13917,22 @@ export const IDL: ClubProgram = {
           {
             name: "DepositPayload",
             fields: [
-              "u8",
               {
-                array: ["u8", 32],
+                name: "club_data",
+                type: {
+                  array: ["u8", 32],
+                },
               },
               {
-                array: ["u8", 32],
+                name: "member_address",
+                type: {
+                  array: ["u8", 32],
+                },
               },
-              "u64",
+              {
+                name: "deposit_amount",
+                type: "u32",
+              },
             ],
           },
         ],

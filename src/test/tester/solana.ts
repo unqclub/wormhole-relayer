@@ -5,6 +5,8 @@ import {
   Connection,
   SYSVAR_RENT_PUBKEY,
   SystemProgram,
+  SYSVAR_CLOCK_PUBKEY,
+  AccountMeta,
 } from "@solana/web3.js";
 import { ClubProgram } from "../../idl/club_program";
 import {
@@ -25,6 +27,14 @@ import * as anchor from "@project-serum/anchor";
 import * as SplGovernance from "@solana/spl-governance";
 import { createMint, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { RoleDto } from "./constants.solana";
+import { getRealm } from "@solana/spl-governance";
+import {
+  deriveEmitterSequenceKey,
+  deriveFeeCollectorKey,
+  deriveWormholeEmitterKey,
+} from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
+import { tryNativeToHexString } from "@certusone/wormhole-sdk";
+import { wormholeProgram } from "../../helpers/utilities";
 
 export const initOgRealm = async (
   name: string,
@@ -34,7 +44,7 @@ export const initOgRealm = async (
 ) => {
   const createRealmIx = [];
 
-  const realmData = await SplGovernance.withCreateRealm(
+  const realm = await SplGovernance.withCreateRealm(
     createRealmIx,
     ogSplGovernance,
     2,
@@ -47,7 +57,14 @@ export const initOgRealm = async (
     new anchor.BN(10)
   );
 
-  return createRealmIx;
+  try {
+    const tx = await sendTransaction(connection, createRealmIx, [payer], payer);
+    await connection.confirmTransaction(tx);
+  } catch (error) {
+    console.log(error);
+  }
+
+  return realm;
 };
 
 export const createClub = async (
@@ -65,12 +82,14 @@ export const createClub = async (
       payer.publicKey,
       5
     );
-    const createRealmIx = await initOgRealm(
+    const realm = await initOgRealm(
       clubName,
       payer,
       communityTokenHoldingMint,
       connection
     );
+    console.log(realm.toBase58(), "TXx");
+
     const [realmAddress] = PublicKey.findProgramAddressSync(
       [governanceSeed, Buffer.from(clubName)],
       splGovernanceProgram
@@ -95,6 +114,7 @@ export const createClub = async (
       ],
       program.programId
     );
+
     const [realmConfigAddress] = PublicKey.findProgramAddressSync(
       [realmConfigSeed, realmAddress.toBuffer()],
       splGovernanceProgram
@@ -126,10 +146,10 @@ export const createClub = async (
     });
 
     const createClubIx = await program.methods
-      .createClub(clubName, 1, buffers, "Owner", "Member", null)
+      .createClub(clubName, 2, buffers, "Owner", "Member", null)
       .accounts({
         realm: realmAddress,
-        ogRealm,
+        ogRealm: realm,
         realmAuthority: payer.publicKey,
         communityTokenHoldingAddress: communityTokenHolding,
         realmConfig: realmConfigAddress,
@@ -146,9 +166,13 @@ export const createClub = async (
       })
       .instruction();
 
-    createRealmIx.push(createClubIx);
-
-    await sendTransaction(connection, createRealmIx, [payer], payer);
+    const tx = await sendTransaction(
+      connection,
+      [createClubIx],
+      [payer],
+      payer
+    );
+    await connection.confirmTransaction(tx);
 
     return {
       clubAddress: clubAddress,
@@ -169,7 +193,12 @@ export const updateVoterWeightIx = async (
   payer: Keypair
 ) => {
   const [voterWeightAddress] = await PublicKey.findProgramAddress(
-    [unqClubSeed, clubData.toBuffer(), voterWeightSeed, memberData.toBuffer()],
+    [
+      unqClubSeed,
+      clubData.toBuffer(),
+      voterWeightSeed,
+      payer.publicKey.toBuffer(),
+    ],
     program.programId
   );
 
@@ -195,7 +224,8 @@ export const createGovernance = async (
   payer: Keypair,
   memberData: PublicKey,
   tokenOwnerRecord: PublicKey,
-  voterWeightAddress: PublicKey
+  voterWeightAddress: PublicKey,
+  ethDenomCurr: string
 ) => {
   const [realmConfigAddress] = PublicKey.findProgramAddressSync(
     [realmConfigSeed, realmAddress.toBuffer()],
@@ -227,7 +257,7 @@ export const createGovernance = async (
   );
 
   const createGovernanceIX = await program.methods
-    .createTreasuryGovernance(15, 55, [], null)
+    .createTreasuryGovernance(86400 * 7 + 1, 55, [], null, ethDenomCurr)
     .accounts({
       treasuryData: treasuryDataPda,
       clubData: clubAddress,
@@ -248,5 +278,57 @@ export const createGovernance = async (
     })
     .instruction();
 
-  return createGovernanceIX;
+  return { createGovernanceIX, treasuryDataPda };
+};
+
+export const emitWormholeMessage = async (
+  program: Program<ClubProgram>,
+  clubAddress: PublicKey,
+  payer: Keypair,
+  args: any,
+  remainingAccounts: AccountMeta[],
+  wormholeProgramId: PublicKey
+) => {
+  const feeCollector = deriveFeeCollectorKey(wormholeProgramId);
+
+  const clubDataAcc = await program.account.clubData.fetch(clubAddress);
+  const emittedMessageCount = Buffer.alloc(4);
+  emittedMessageCount.writeUint32LE(clubDataAcc.emittedMessageCount + 1);
+
+  const [message] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("wormhole-message"),
+      clubAddress.toBuffer(),
+      emittedMessageCount,
+    ],
+    program.programId
+  );
+
+  const [wormholeConfig] = PublicKey.findProgramAddressSync(
+    [Buffer.from("Bridge")],
+    wormholeProgramId
+  );
+
+  const emitter = deriveWormholeEmitterKey(program.programId);
+  const sequence = deriveEmitterSequenceKey(emitter, wormholeProgramId);
+
+  const ix = await program.methods
+    .postWormholeMessage(args, 12)
+    .accounts({
+      clubData: clubAddress,
+      clock: SYSVAR_CLOCK_PUBKEY,
+      payer: payer.publicKey,
+      wormhole: wormholeProgramId,
+      rent: SYSVAR_RENT_PUBKEY,
+      emitterAddress: emitter,
+      feeCollector,
+      sequence,
+      wormholeConfig,
+      systemProgram: SystemProgram.programId,
+      message: message,
+    })
+    .remainingAccounts(remainingAccounts)
+    .instruction();
+
+  return ix;
 };
