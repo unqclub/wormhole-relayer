@@ -198,5 +198,10 @@ export const realyIxOnSolana = async (
   const versionedTx = new VersionedTransaction(tx);
   versionedTx.sign([wallet.payer]);
 
-  await wallet.conn.sendRawTransaction(versionedTx.serialize());
+  try {
+    const tx = await wallet.conn.sendRawTransaction(versionedTx.serialize());
+    console.log(tx);
+  } catch (error) {
+    console.log(error);
+  }
 };

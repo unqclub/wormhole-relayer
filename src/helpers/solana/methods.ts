@@ -1,13 +1,11 @@
 import { ParsedVaa, tryUint8ArrayToNative } from "@certusone/wormhole-sdk";
 import { Program } from "@project-serum/anchor";
-import { program } from "@project-serum/anchor/dist/cjs/native/system";
 import {
   Keypair,
   PublicKey,
   SystemProgram,
   AccountMeta,
 } from "@solana/web3.js";
-import { SolanaWallet } from "../../../../relayer-engine/relayer-engine/lib";
 import { ClubProgram } from "../../idl/club_program";
 import {
   financialRecordSeed,
@@ -33,6 +31,8 @@ export async function emitMessageOnSolana(
       wormholeSolProgram
     );
 
+    console.log(payload.byteLength, "PAYLOAD LEN");
+
     const receiveWormholeMessageIx = await wormholeSolProgram.methods
       .receiveWormholeMessage(vaa)
       .accounts({
@@ -54,21 +54,21 @@ export const getInstructionRemainingAccounts = (
   program: Program<ClubProgram>
 ) => {
   const action = payload[0] as WormholePayloadAction;
+  console.log(action, "ACTIONNN");
 
   const remainingAccounts: AccountMeta[] = [];
   let clubData: PublicKey;
+  let financialRecord: PublicKey;
 
   switch (action) {
     case WormholePayloadAction.DepositEvent: {
       const rawClubAddress = payload.subarray(1, 33);
       clubData = new PublicKey(tryUint8ArrayToNative(rawClubAddress, "solana"));
-      const rawMemberAddress = payload.subarray(33, 55);
+      const rawMemberAddress = payload.subarray(33, 65);
       const memberPubkey = new PublicKey(
         tryUint8ArrayToNative(rawMemberAddress, "solana")
       );
-      const depositAmount = payload
-        .subarray(55, payload.length)
-        .readBigInt64BE(0);
+
       const treasuryIndex = 1;
       let treasuryIndexBuffer = Buffer.alloc(4);
       treasuryIndexBuffer.writeUint8(treasuryIndex);
@@ -91,7 +91,7 @@ export const getInstructionRemainingAccounts = (
         program.programId
       );
 
-      const [financialRecord] = PublicKey.findProgramAddressSync(
+      [financialRecord] = PublicKey.findProgramAddressSync(
         [
           unqClubSeed,
           treasuryDataPda.toBuffer(),
@@ -120,5 +120,5 @@ export const getInstructionRemainingAccounts = (
       );
     }
   }
-  return { remainingAccounts, clubData };
+  return { remainingAccounts, clubData, financialRecord };
 };

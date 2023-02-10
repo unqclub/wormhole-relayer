@@ -4413,11 +4413,6 @@ export type ClubProgram = {
           isSigner: false;
         },
         {
-          name: "registeredChain";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "payer";
           isMut: true;
           isSigner: true;
@@ -6438,7 +6433,16 @@ export type ClubProgram = {
         variants: [
           {
             name: "DepositPayload";
-            fields: ["u64", "bytes"];
+            fields: [
+              "u8",
+              {
+                array: ["u8", 32];
+              },
+              {
+                array: ["u8", 32];
+              },
+              "u64"
+            ];
           }
         ];
       };
@@ -11860,11 +11864,6 @@ export const IDL: ClubProgram = {
           isSigner: false,
         },
         {
-          name: "registeredChain",
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: "payer",
           isMut: true,
           isSigner: true,
@@ -13885,7 +13884,16 @@ export const IDL: ClubProgram = {
         variants: [
           {
             name: "DepositPayload",
-            fields: ["u64", "bytes"],
+            fields: [
+              "u8",
+              {
+                array: ["u8", 32],
+              },
+              {
+                array: ["u8", 32],
+              },
+              "u64",
+            ],
           },
         ],
       },
