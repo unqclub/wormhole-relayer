@@ -4909,12 +4909,6 @@ export type ClubProgram = {
           {
             name: "createdAt";
             type: "i64";
-          },
-          {
-            name: "destinationAddress";
-            type: {
-              option: "bytes";
-            };
           }
         ];
       };
@@ -12392,12 +12386,6 @@ export const IDL: ClubProgram = {
           {
             name: "createdAt",
             type: "i64",
-          },
-          {
-            name: "destinationAddress",
-            type: {
-              option: "bytes",
-            },
           },
         ],
       },

@@ -7,22 +7,37 @@ import pluginConfig from "../../unqPluginConfig.json";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import * as assert from "assert";
 import {
+  castProposalVote,
   createClub,
   createGovernance,
+  createProposalMetadata,
+  createTransferProposal,
   emitWormholeMessage,
-  updateVoterWeightIx,
+  updateProposalDescription,
+  updateVoterWeight,
+  updateVoterWeightForGovernanceIx,
 } from "./tester/solana";
 import shortUUID from "short-uuid";
 import {
+  accountGovernanceSeed,
   financialRecordSeed,
   getEthereumHexFormat,
   getTreasuryContract,
+  governanceSeed,
+  proposalMetadataSeed,
+  ProposalType,
   sendTransaction,
+  splGovernanceProgram,
   unqClubSeed,
   zeroAddres,
 } from "./helpers";
-import { hexToUint8Array, tryNativeToHexString } from "@certusone/wormhole-sdk";
+import {
+  hexToUint8Array,
+  tryNativeToHexString,
+  tryUint8ArrayToNative,
+} from "@certusone/wormhole-sdk";
 import unqPlugin from "../../unqPluginConfig.json";
+import { ClubAction } from "./tester/constants.solana";
 
 describe("it should create club with treasury on ethereum", async () => {
   const SOLANA_RPC_CONNECTION = new Connection("http://127.0.0.1:8899");
@@ -38,6 +53,12 @@ describe("it should create club with treasury on ethereum", async () => {
   let realmPda: PublicKey;
   let treasuryContract: ethers.Contract;
   let treasuryData: PublicKey;
+  let proposalAddress: PublicKey;
+  let proposalMetadata: PublicKey;
+  let governanceAccount: PublicKey;
+  let communityMint: PublicKey;
+  let treasuryAddress: PublicKey;
+  let proposalInstruction: PublicKey;
 
   const clubProgram = new Program<ClubProgram>(
     IDL,
@@ -65,7 +86,7 @@ describe("it should create club with treasury on ethereum", async () => {
   );
 
   it("should create club", async () => {
-    const { clubAddress, memberAddress, realmAddress, tokenOwnerRecord } =
+    const { clubAddress, memberAddress, realmAddress, tokenOwnerRecord, mint } =
       await createClub(
         "NekiC" + shortUUID.generate(),
         clubProgram,
@@ -76,27 +97,30 @@ describe("it should create club with treasury on ethereum", async () => {
     realmPda = realmAddress;
     memberPda = memberAddress;
     tokenOwnerRecordPda = tokenOwnerRecord;
+    communityMint = mint;
   });
 
   it("should create treasury governance", async () => {
-    const { voterWeightAddress, ix } = await updateVoterWeightIx(
+    const { voterWeightAddress, ix } = await updateVoterWeightForGovernanceIx(
       clubProgram,
       realmPda,
       memberPda,
       clubPda,
       wallet
     );
-    const { createGovernanceIX, treasuryDataPda } = await createGovernance(
-      clubProgram,
-      clubPda,
-      realmPda,
-      wallet,
-      memberPda,
-      tokenOwnerRecordPda,
-      voterWeightAddress,
-      zeroAddres
-    );
+    const { createGovernanceIX, treasuryDataPda, treasuryPda } =
+      await createGovernance(
+        clubProgram,
+        clubPda,
+        realmPda,
+        wallet,
+        memberPda,
+        tokenOwnerRecordPda,
+        voterWeightAddress,
+        zeroAddres
+      );
     treasuryData = treasuryDataPda;
+    treasuryAddress = treasuryPda;
 
     const wormholeIx = await emitWormholeMessage(
       clubProgram,
@@ -104,12 +128,7 @@ describe("it should create club with treasury on ethereum", async () => {
       wallet,
       {
         ethAddress: Buffer.from(
-          hexToUint8Array(
-            tryNativeToHexString(
-              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "ethereum"
-            )
-          )
+          hexToUint8Array(tryNativeToHexString(zeroAddres, "ethereum"))
         ),
         action: { createTreasury: {} },
       },
@@ -140,7 +159,9 @@ describe("it should create club with treasury on ethereum", async () => {
     const encodedMemberData = getEthereumHexFormat(
       tryNativeToHexString(wallet.publicKey.toString(), "solana")
     );
+
     const memberData = await treasuryContract.getMemberData(encodedMemberData);
+
     assert.equal(memberData.realmAddress, encodedClubData);
     assert.equal(memberData.status, 1);
     assert.equal(memberData.solanaAddress, encodedMemberData);
@@ -181,5 +202,172 @@ describe("it should create club with treasury on ethereum", async () => {
       await ETH_RPC_CONNECTION.getBalance(treasuryContract.address),
       125
     );
+  });
+
+  it("should create transfer proposal", async () => {
+    let proposalIndexBuffer = Buffer.alloc(4);
+    proposalIndexBuffer.writeInt32LE(0, 0);
+
+    [governanceAccount] = PublicKey.findProgramAddressSync(
+      [accountGovernanceSeed, realmPda.toBuffer(), treasuryAddress.toBuffer()],
+      splGovernanceProgram
+    );
+
+    [proposalAddress] = PublicKey.findProgramAddressSync(
+      [
+        governanceSeed,
+        governanceAccount.toBuffer(),
+        communityMint.toBuffer(),
+        proposalIndexBuffer,
+      ],
+      splGovernanceProgram
+    );
+    [proposalMetadata] = await PublicKey.findProgramAddress(
+      [unqClubSeed, proposalAddress.toBuffer(), proposalMetadataSeed],
+      clubProgram.programId
+    );
+
+    const createProposalMetadataIx = await createProposalMetadata(
+      clubProgram,
+      clubPda,
+      communityMint,
+      memberPda,
+      realmPda,
+      treasuryAddress,
+      treasuryData,
+      wallet,
+      ProposalType.TransferFunds,
+      []
+    );
+
+    const updatedescription = await updateProposalDescription(
+      clubProgram,
+      "Wormhole Transfe funds",
+      "Wormhole proposal",
+      ["option YES"],
+      "Testing wormhole",
+      wallet,
+      proposalMetadata,
+      proposalAddress
+    );
+
+    try {
+      const tx = await sendTransaction(
+        SOLANA_RPC_CONNECTION,
+        [createProposalMetadataIx.tx, updatedescription.tx],
+        [wallet],
+        wallet
+      );
+
+      await SOLANA_RPC_CONNECTION.confirmTransaction(tx);
+    } catch (error) {
+      console.log(error);
+    }
+
+    const uvwIx = await updateVoterWeight(
+      clubProgram,
+      clubPda,
+      wallet,
+      proposalAddress,
+      proposalMetadata,
+      memberPda,
+      treasuryData,
+      realmPda,
+      ClubAction.CreateTransferProposal
+    );
+    const createTransferProposalIx = await createTransferProposal(
+      clubProgram,
+      120,
+      createProposalMetadataIx.governanceAccount,
+      realmPda,
+      proposalAddress,
+      tokenOwnerRecordPda,
+      clubPda,
+      treasuryAddress,
+      wallet,
+      proposalMetadata,
+      treasuryData,
+      communityMint,
+      "0x7c73162E5Fd56d74c6d407d02602eAcC8B9c2BF1"
+    );
+    proposalInstruction = createTransferProposalIx.instructionAddress;
+    try {
+      const createTx = await sendTransaction(
+        SOLANA_RPC_CONNECTION,
+        [uvwIx.ix, createTransferProposalIx.ix],
+        [wallet],
+        wallet
+      );
+
+      await SOLANA_RPC_CONNECTION.confirmTransaction(createTx);
+    } catch (error) {
+      console.log(error);
+    }
+  });
+
+  it("should cast proposal vote", async () => {
+    const uvwIx = await updateVoterWeight(
+      clubProgram,
+      clubPda,
+      wallet,
+      proposalAddress,
+      proposalMetadata,
+      memberPda,
+      treasuryData,
+      realmPda,
+      ClubAction.CastVote
+    );
+
+    const castVoteIx = await castProposalVote(
+      clubProgram,
+      clubPda,
+      realmPda,
+      proposalAddress,
+      uvwIx.ix,
+      governanceAccount,
+      wallet,
+      tokenOwnerRecordPda,
+      communityMint
+    );
+  });
+  it("should emit message for transfering funds", async () => {
+    const emitIx = await emitWormholeMessage(
+      clubProgram,
+      clubPda,
+      wallet,
+      {
+        ethAddress: Buffer.from(
+          hexToUint8Array(
+            tryNativeToHexString(
+              "0x7c73162E5Fd56d74c6d407d02602eAcC8B9c2BF1",
+              "ethereum"
+            )
+          )
+        ),
+        action: { transferFunds: {} },
+      },
+      [
+        { isSigner: false, isWritable: true, pubkey: proposalMetadata },
+        { isSigner: false, isWritable: true, pubkey: proposalAddress },
+        { isSigner: false, isWritable: true, pubkey: proposalInstruction },
+      ],
+      wormholeProgramId
+    );
+    try {
+      const tx = await sendTransaction(
+        SOLANA_RPC_CONNECTION,
+        [emitIx],
+        [wallet],
+        wallet
+      );
+      console.log(tx, "TXXX");
+
+      await SOLANA_RPC_CONNECTION.confirmTransaction(tx);
+    } catch (error) {
+      console.log(error);
+    }
+    factoryContract.on("TransferFunds", (realm, destination, amount) => {
+      console.log(realm, destination, amount);
+    });
   });
 });

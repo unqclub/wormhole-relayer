@@ -32,7 +32,7 @@ export const ogSplGovernance = new PublicKey(
 );
 
 export const escrowProgram = new PublicKey(
-  "UNQexJ9r9nooPc8y9cWDWNSXSbz1eyggV7K7szbzsXt"
+  "Dynfjdk3AL3BSTkftRLRn67wACBMT6MqGot1sSgnkiuf"
 );
 
 export const getTreasuryContract = (
