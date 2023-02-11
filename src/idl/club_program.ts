@@ -3185,6 +3185,12 @@ export type ClubProgram = {
         {
           name: "transferAmount";
           type: "u64";
+        },
+        {
+          name: "transferDestination";
+          type: {
+            option: "bytes";
+          };
         }
       ];
     },
@@ -4903,6 +4909,12 @@ export type ClubProgram = {
           {
             name: "createdAt";
             type: "i64";
+          },
+          {
+            name: "destinationAddress";
+            type: {
+              option: "bytes";
+            };
           }
         ];
       };
@@ -10657,6 +10669,12 @@ export const IDL: ClubProgram = {
           name: "transferAmount",
           type: "u64",
         },
+        {
+          name: "transferDestination",
+          type: {
+            option: "bytes",
+          },
+        },
       ],
     },
     {
@@ -12374,6 +12392,12 @@ export const IDL: ClubProgram = {
           {
             name: "createdAt",
             type: "i64",
+          },
+          {
+            name: "destinationAddress",
+            type: {
+              option: "bytes",
+            },
           },
         ],
       },

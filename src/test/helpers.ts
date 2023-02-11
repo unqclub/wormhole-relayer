@@ -19,6 +19,9 @@ export const financialRecordSeed = Buffer.from("financial-record");
 export const treasurySeed = Buffer.from("treasury");
 export const profitSeed = Buffer.from("profit");
 export const accountGovernanceSeed = Buffer.from("account-governance");
+export const proposalMetadataSeed = Buffer.from("proposal-metadata");
+export const maxVoterWeightSeed = Buffer.from("max-voter-weight-record");
+export const offerSeed = Buffer.from("offer");
 
 export const splGovernanceProgram = new PublicKey(
   "UNQgUq3jtWnEmQraenUckLda9ueYzNc2uywWVPcMC4D"
@@ -26,6 +29,10 @@ export const splGovernanceProgram = new PublicKey(
 
 export const ogSplGovernance = new PublicKey(
   "GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw"
+);
+
+export const escrowProgram = new PublicKey(
+  "UNQexJ9r9nooPc8y9cWDWNSXSbz1eyggV7K7szbzsXt"
 );
 
 export const getTreasuryContract = (
@@ -68,3 +75,15 @@ export const getEthereumHexFormat = (address: string): string => {
 };
 
 export const zeroAddres = "0x0000000000000000000000000000000000000000";
+
+export enum ProposalType {
+  BuyP2P,
+  SellP2P,
+  BuyNowMagicEden,
+  SellMagicEden,
+  TransferFunds,
+  Discussion,
+  Withdrawal,
+  UpdateClubConfig,
+  SellSolsea,
+}

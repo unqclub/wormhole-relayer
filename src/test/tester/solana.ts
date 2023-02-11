@@ -11,9 +11,14 @@ import {
 import { ClubProgram } from "../../idl/club_program";
 import {
   accountGovernanceSeed,
+  escrowProgram,
   governanceSeed,
+  maxVoterWeightSeed,
+  offerSeed,
   ogSplGovernance,
   profitSeed,
+  proposalMetadataSeed,
+  ProposalType,
   realmConfigSeed,
   sendTransaction,
   splGovernanceProgram,
@@ -25,8 +30,13 @@ import {
 } from "../helpers";
 import * as anchor from "@project-serum/anchor";
 import * as SplGovernance from "@solana/spl-governance";
-import { createMint, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { RoleDto } from "./constants.solana";
+import {
+  createMint,
+  getOrCreateAssociatedTokenAccount,
+  NATIVE_MINT,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import { ClubAction, RoleDto } from "./constants.solana";
 import { getRealm } from "@solana/spl-governance";
 import {
   deriveEmitterSequenceKey,
@@ -34,7 +44,7 @@ import {
   deriveWormholeEmitterKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { tryNativeToHexString } from "@certusone/wormhole-sdk";
-import { wormholeProgram } from "../../helpers/utilities";
+import { connection, wormholeProgram } from "../../helpers/utilities";
 
 export const initOgRealm = async (
   name: string,
@@ -331,4 +341,215 @@ export const emitWormholeMessage = async (
     .instruction();
 
   return ix;
+};
+
+export const createProposalMetadata = async (
+  program: Program<ClubProgram>,
+  clubAddress: PublicKey,
+  collectionMint: PublicKey,
+  memberData: PublicKey,
+  realmAddress: PublicKey,
+  treasuryPda: PublicKey,
+  payer: Keypair,
+  proposalType: ProposalType,
+  remainingAccounts: AccountMeta[]
+) => {
+  let proposalIndexBuffer = Buffer.alloc(4);
+  proposalIndexBuffer.writeInt32LE(1, 0);
+
+  const [governanceAccount] = PublicKey.findProgramAddressSync(
+    [accountGovernanceSeed, realmAddress.toBuffer(), treasuryPda.toBuffer()],
+    splGovernanceProgram
+  );
+
+  const proposalAddress: PublicKey = PublicKey.findProgramAddressSync(
+    [
+      governanceSeed,
+      governanceAccount.toBuffer(),
+      collectionMint.toBuffer(),
+      proposalIndexBuffer,
+    ],
+    splGovernanceProgram
+  )[0];
+
+  const [proposalMetadata] = PublicKey.findProgramAddressSync(
+    [unqClubSeed, proposalAddress.toBuffer(), proposalMetadataSeed],
+    program.programId
+  );
+
+  const tx = await program.methods
+    .createProposalMetadata(proposalType ?? 0, null, null, null)
+    .accounts({
+      clubData: clubAddress,
+      proposal: proposalAddress,
+      proposalMetadata,
+      memberData: memberData,
+      governance: governanceAccount,
+      realm: realmAddress,
+      payer: payer.publicKey,
+      treasuryData: treasuryPda,
+      systemProgram: anchor.web3.SystemProgram.programId,
+    })
+    .remainingAccounts(remainingAccounts)
+    .instruction();
+
+  return {
+    tx,
+    proposalMetadata,
+  };
+};
+
+export const updateProposalDescription = async (
+  program: Program<ClubProgram>,
+  descriptionBuffer: string,
+  name: string,
+  options: string[],
+  discussionLink: string,
+  payer: Keypair,
+  proposalMetadata: PublicKey,
+  proposalAddress: PublicKey
+) => {
+  const tx = await program.methods
+    .updateProposalDescription(descriptionBuffer, name, options, discussionLink)
+    .accounts({
+      proposal: proposalAddress,
+      proposalMetadata: proposalMetadata,
+      payer: payer.publicKey,
+    })
+    .instruction();
+
+  return {
+    tx,
+    proposalMetadata: proposalMetadata,
+  };
+};
+
+export const updateVoterWeight = async (
+  program: Program<ClubProgram>,
+  clubAddress: PublicKey,
+  payer: Keypair,
+  proposalAddress: PublicKey,
+  proposalMetadata: PublicKey,
+  memberData: PublicKey,
+  treasuryDataPda: PublicKey,
+  realmAddress: PublicKey,
+  action: ClubAction
+) => {
+  const [voterWeightAddress] = await PublicKey.findProgramAddress(
+    [
+      unqClubSeed,
+      clubAddress.toBuffer(),
+      voterWeightSeed,
+      payer.publicKey.toBuffer(),
+    ],
+    program.programId
+  );
+
+  const [maxVoterWeightPda] = PublicKey.findProgramAddressSync(
+    [unqClubSeed, proposalAddress.toBuffer(), maxVoterWeightSeed],
+    program.programId
+  );
+
+  const ix = program.methods.updateVoterWeight(action).accounts({
+    proposal: proposalAddress,
+    proposalMetadata,
+    maxVoterWeightRecord: maxVoterWeightPda,
+    clubData: clubAddress,
+    memberData: memberData,
+    treasuryData: treasuryDataPda,
+    realm: realmAddress,
+    voterWeightRecord: voterWeightAddress,
+    payer: payer.publicKey,
+    systemProgram: anchor.web3.SystemProgram.programId,
+  });
+
+  return { ix, voterWeightAddress };
+};
+
+export const createTransferProposal = async (
+  program: Program<ClubProgram>,
+  transferAmount: number,
+  governance: PublicKey,
+  realmAddress: PublicKey,
+  proposal: PublicKey,
+  tokenOwnerRecord: PublicKey,
+  clubAddress: PublicKey,
+  treasuryPda: PublicKey,
+  payer: Keypair,
+  proposalMetadata: PublicKey,
+  treasuryDataPda: PublicKey,
+  collectionMint: PublicKey,
+  destinationAddress: string
+) => {
+  const [realmConfigAddress] = PublicKey.findProgramAddressSync(
+    [realmConfigSeed, realmAddress.toBuffer()],
+    splGovernanceProgram
+  );
+  const [voterWeightAddress] = await PublicKey.findProgramAddress(
+    [
+      unqClubSeed,
+      clubAddress.toBuffer(),
+      voterWeightSeed,
+      payer.publicKey.toBuffer(),
+    ],
+    program.programId
+  );
+
+  const treasuryToken = await getOrCreateAssociatedTokenAccount(
+    connection,
+    payer,
+    NATIVE_MINT,
+    treasuryPda,
+    true
+  );
+
+  const optionIndex = 0;
+  const transactionIndex = 0;
+  let optionIndexBuffer = Buffer.alloc(1);
+  optionIndexBuffer.writeUInt8(optionIndex);
+
+  let instructionIndexBuffer = Buffer.alloc(2);
+  instructionIndexBuffer.writeInt16LE(transactionIndex, 0);
+
+  const [instructionAddress] = PublicKey.findProgramAddressSync(
+    [
+      governanceSeed,
+      proposal.toBuffer(),
+      optionIndexBuffer,
+      instructionIndexBuffer,
+    ],
+    splGovernanceProgram
+  );
+  const [offer] = PublicKey.findProgramAddressSync(
+    [offerSeed, proposal.toBuffer()],
+    escrowProgram
+  );
+  const ix = program.methods
+    .createTransferProposal(
+      true,
+      new anchor.BN(transferAmount),
+      destinationAddress
+    )
+    .accounts({
+      governance,
+      realm: realmAddress,
+      realmConfig: realmConfigAddress,
+      proposal: proposal,
+      proposalTransactionAddress: instructionAddress,
+      tokenOwnerRecord: tokenOwnerRecord,
+      splGovernanceProgram: splGovernanceProgram,
+      communityTokenMint: collectionMint,
+      payer: payer.publicKey,
+      voterWeightRecord: voterWeightAddress,
+      treasury: treasuryPda,
+      treasuryData: treasuryDataPda,
+      proposalMetadata: proposalMetadata,
+      clubData: clubAddress,
+      offer: offer,
+      destination: payer.publicKey,
+      treasuryToken: treasuryToken.address,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: anchor.web3.SystemProgram.programId,
+      rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+    });
 };
