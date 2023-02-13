@@ -5788,9 +5788,9 @@ export type ClubProgram = {
             type: "bytes";
           },
           {
-            name: "fundsAmount";
+            name: "creatorAddress";
             type: {
-              option: "u64";
+              option: "bytes";
             };
           }
         ];
@@ -13265,9 +13265,9 @@ export const IDL: ClubProgram = {
             type: "bytes",
           },
           {
-            name: "fundsAmount",
+            name: "creatorAddress",
             type: {
-              option: "u64",
+              option: "bytes",
             },
           },
         ],

@@ -143,6 +143,9 @@ describe("it should create club with treasury on ethereum", async () => {
           hexToUint8Array(tryNativeToHexString(zeroAddres, "ethereum"))
         ),
         action: { createTreasury: {} },
+        creatorAddress: Buffer.from(
+          hexToUint8Array(tryNativeToHexString(ethWallet.address, "ethereum"))
+        ),
       },
       [{ isSigner: false, isWritable: false, pubkey: memberPda }],
       wormholeProgramId
@@ -360,6 +363,7 @@ describe("it should create club with treasury on ethereum", async () => {
           )
         ),
         action: { transferFunds: {} },
+        creatorAddress: null,
       },
       [
         { isSigner: false, isWritable: true, pubkey: proposalMetadata },
