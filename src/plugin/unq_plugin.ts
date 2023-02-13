@@ -105,6 +105,8 @@ export class UnqPlugin implements Plugin<VAA> {
     const vaa = Buffer.from(workflow.data, "base64");
     const parsedVaa = parseVaa(vaa);
 
+    console.log(parsedVaa.payload.byteLength, "MESSAGE LENGTH");
+
     switch (parsedVaa.emitterChain) {
       case CHAIN_ID_SOLANA: {
         await submitOnEnv(
@@ -199,7 +201,7 @@ export const realyIxOnSolana = async (
 
   try {
     const tx = await wallet.conn.sendRawTransaction(versionedTx.serialize());
-    console.log(tx);
+    console.log("TX SIG:", tx);
   } catch (error) {
     console.log(error);
   }

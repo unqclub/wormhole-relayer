@@ -15,6 +15,7 @@ import {
   unqClubSeed,
 } from "../../test/helpers";
 import { WormholePayloadAction, wormholeProgram } from "../utilities";
+import * as ethers from "ethers";
 
 export async function emitMessageOnSolana(
   vaa: Buffer,
@@ -69,7 +70,10 @@ export const getInstructionRemainingAccounts = (
         tryUint8ArrayToNative(rawMemberAddress, "solana")
       );
       const depositAmount = payload.subarray(65);
-      console.log(depositAmount.reverse().readUint32LE(), "DEP AM");
+      console.log(
+        ethers.BigNumber.from(payload.subarray(65)).toBigInt(),
+        "DEP AM"
+      );
 
       const treasuryIndex = 1;
       let treasuryIndexBuffer = Buffer.alloc(4);
