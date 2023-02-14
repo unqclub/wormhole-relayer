@@ -9,6 +9,7 @@ import {
 import { ClubProgram } from "../../idl/club_program";
 import {
   financialRecordSeed,
+  fundraiseCfgSeed,
   treasuryDataSeed,
   treasurySeed,
   unqClubMemberSeed,
@@ -27,12 +28,8 @@ export async function emitMessageOnSolana(
 
     const payload = parsedVaa.payload;
 
-    const { clubData, remainingAccounts } = getInstructionRemainingAccounts(
-      payload,
-      wormholeSolProgram
-    );
-
-    console.log(payload.byteLength, "PAYLOAD LEN");
+    const { clubData, remainingAccounts } =
+      await getInstructionRemainingAccounts(payload, wormholeSolProgram);
 
     const receiveWormholeMessageIx = await wormholeSolProgram.methods
       .receiveWormholeMessage(vaa)
@@ -50,12 +47,11 @@ export async function emitMessageOnSolana(
   }
 }
 
-export const getInstructionRemainingAccounts = (
+export const getInstructionRemainingAccounts = async (
   payload: Buffer,
   program: Program<ClubProgram>
 ) => {
   const action = payload[0] as WormholePayloadAction;
-  console.log(action, "ACTIONNN");
 
   const remainingAccounts: AccountMeta[] = [];
   let clubData: PublicKey;
@@ -68,11 +64,6 @@ export const getInstructionRemainingAccounts = (
       const rawMemberAddress = payload.subarray(33, 65);
       const memberPubkey = new PublicKey(
         tryUint8ArrayToNative(rawMemberAddress, "solana")
-      );
-      const depositAmount = payload.subarray(65);
-      console.log(
-        ethers.BigNumber.from(payload.subarray(65)).toBigInt(),
-        "DEP AM"
       );
 
       const treasuryIndex = 1;
@@ -97,6 +88,24 @@ export const getInstructionRemainingAccounts = (
         program.programId
       );
 
+      const treasuryDataAcc = await program.account.treasuryData.fetch(
+        treasuryDataPda
+      );
+
+      const fundraiseCount = treasuryDataAcc.fundraiseCount;
+      const fundraiseCountBuffer = Buffer.alloc(4);
+      fundraiseCountBuffer.writeUint32LE(fundraiseCount, 0);
+
+      const [fundraiseConfigAddress] = await PublicKey.findProgramAddress(
+        [
+          unqClubSeed,
+          treasuryDataPda.toBuffer(),
+          fundraiseCfgSeed,
+          fundraiseCountBuffer,
+        ],
+        program.programId
+      );
+
       [financialRecord] = PublicKey.findProgramAddressSync(
         [
           unqClubSeed,
@@ -110,18 +119,23 @@ export const getInstructionRemainingAccounts = (
       remainingAccounts.push(
         {
           isSigner: false,
-          isWritable: false,
+          isWritable: true,
           pubkey: memberData,
         },
         {
           isSigner: false,
-          isWritable: false,
+          isWritable: true,
           pubkey: treasuryDataPda,
         },
         {
           isSigner: false,
           isWritable: true,
           pubkey: financialRecord,
+        },
+        {
+          isSigner: false,
+          isWritable: true,
+          pubkey: fundraiseConfigAddress,
         }
       );
     }

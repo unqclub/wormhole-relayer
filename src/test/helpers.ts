@@ -22,6 +22,7 @@ export const accountGovernanceSeed = Buffer.from("account-governance");
 export const proposalMetadataSeed = Buffer.from("proposal-metadata");
 export const maxVoterWeightSeed = Buffer.from("max-voter-weight-record");
 export const offerSeed = Buffer.from("offer");
+export const fundraiseCfgSeed = Buffer.from("fundraise-cfg");
 
 export const splGovernanceProgram = new PublicKey(
   "UNQgUq3jtWnEmQraenUckLda9ueYzNc2uywWVPcMC4D"

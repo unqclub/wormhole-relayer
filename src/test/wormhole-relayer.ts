@@ -14,6 +14,7 @@ import * as assert from "assert";
 import {
   castProposalVote,
   createClub,
+  createFundraise,
   createGovernance,
   createProposalMetadata,
   createTransferProposal,
@@ -26,6 +27,7 @@ import shortUUID from "short-uuid";
 import {
   accountGovernanceSeed,
   financialRecordSeed,
+  fundraiseCfgSeed,
   getEthereumHexFormat,
   getTreasuryContract,
   governanceSeed,
@@ -67,6 +69,7 @@ describe("it should create club with treasury on ethereum", async () => {
   let communityMint: PublicKey;
   let treasuryAddress: PublicKey;
   let proposalInstruction: PublicKey;
+  let fundraiseConfig: PublicKey;
 
   const clubProgram = new Program<ClubProgram>(
     IDL,
@@ -164,6 +167,26 @@ describe("it should create club with treasury on ethereum", async () => {
     }
   });
 
+  it("should create fundraise", async () => {
+    const fundraiseTx = await createFundraise(
+      clubProgram,
+      2 * LAMPORTS_PER_SOL,
+      treasuryAddress,
+      clubPda,
+      treasuryData,
+      memberPda,
+      wallet
+    );
+    fundraiseConfig = fundraiseTx.fundraiseConfigAddress;
+    const tx = await sendTransaction(
+      SOLANA_RPC_CONNECTION,
+      [fundraiseTx.tx],
+      [wallet],
+      wallet
+    );
+    await SOLANA_RPC_CONNECTION.confirmTransaction(tx);
+  });
+
   it("should fetch created treasury from ethereum", async () => {
     const encodedClubData = getEthereumHexFormat(
       tryNativeToHexString(clubPda.toString(), "solana")
@@ -202,24 +225,32 @@ describe("it should create club with treasury on ethereum", async () => {
       ],
       clubProgram.programId
     );
-    // await new Promise((resolve) => setTimeout(resolve, 15000));
-    // const financialRecordAccount =
-    //   await clubProgram.account.financialRecord.fetch(financialRecord);
-    // assert.equal(
-    //   financialRecordAccount.authority.toString(),
-    //   wallet.publicKey.toString()
-    // );
-    // assert.equal(
-    //   financialRecordAccount.depositRecords[0].accumulatedAmount.toNumber(),
-    //   2 * LAMPORTS_PER_SOL
-    // );
 
-    // assert.equal(
-    //   (
-    //     await ETH_RPC_CONNECTION.getBalance(treasuryContract.address)
-    //   ).toBigInt(),
-    //   ethers.BigNumber.from("2000000000000000000")
-    // );
+    await new Promise((resolve) => setTimeout(resolve, 20000));
+    const financialRecordAccount =
+      await clubProgram.account.financialRecord.fetch(financialRecord);
+    assert.equal(
+      financialRecordAccount.authority.toString(),
+      wallet.publicKey.toString()
+    );
+    assert.equal(
+      financialRecordAccount.depositRecords[0].accumulatedAmount.toNumber(),
+      2 * LAMPORTS_PER_SOL
+    );
+
+    assert.equal(
+      (
+        await ETH_RPC_CONNECTION.getBalance(treasuryContract.address)
+      ).toBigInt(),
+      ethers.BigNumber.from("2000000000000000000")
+    );
+
+    const funraiseAccount = await clubProgram.account.fundraiseConfig.fetch(
+      fundraiseConfig
+    );
+
+    assert.equal(funraiseAccount.isActive, false);
+    assert.equal(funraiseAccount.raisedAmount.toNumber(), 2 * LAMPORTS_PER_SOL);
   });
 
   it("should create transfer proposal", async () => {

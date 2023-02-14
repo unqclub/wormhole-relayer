@@ -164,7 +164,7 @@ async function submitOnEnv(
     chainId,
     f: async ({ wallet }) => {
       return wormholeUnqContract.connect(wallet).parseVM(Buffer.from(vaa), {
-        gasLimit: 10000001,
+        gasLimit: 1000000,
       });
     },
   });

@@ -13,6 +13,7 @@ import { ClubProgram } from "../../idl/club_program";
 import {
   accountGovernanceSeed,
   escrowProgram,
+  fundraiseCfgSeed,
   governanceSeed,
   maxVoterWeightSeed,
   offerSeed,
@@ -626,4 +627,40 @@ export const castProposalVote = async (
   } catch (error) {
     console.log(error);
   }
+};
+
+export const createFundraise = async (
+  program: Program<ClubProgram>,
+  fundraiseAmount: number,
+  treasury: PublicKey,
+  clubAddress: PublicKey,
+  treasuryData: PublicKey,
+  memberData: PublicKey,
+  payer: Keypair
+) => {
+  const fundraiseCountBuffer = Buffer.alloc(4);
+  fundraiseCountBuffer.writeUint32LE(1, 0);
+  const [fundraiseConfigAddress] = await PublicKey.findProgramAddress(
+    [
+      unqClubSeed,
+      treasuryData.toBuffer(),
+      fundraiseCfgSeed,
+      fundraiseCountBuffer,
+    ],
+    program.programId
+  );
+  const tx = await program.methods
+    .createFundraise(new anchor.BN(fundraiseAmount))
+    .accounts({
+      treasury: treasury,
+      clubData: clubAddress,
+      treasuryData: treasuryData,
+      fundraiseConfig: fundraiseConfigAddress,
+      memberData: memberData,
+      payer: payer.publicKey,
+      systemProgram: anchor.web3.SystemProgram.programId,
+    })
+    .instruction();
+
+  return { tx, fundraiseConfigAddress };
 };
