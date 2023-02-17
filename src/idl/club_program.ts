@@ -269,6 +269,12 @@ export type ClubProgram = {
           };
         },
         {
+          name: "treasuryChain";
+          type: {
+            defined: "TreasuryChain";
+          };
+        },
+        {
           name: "nftMaxVoterWeight";
           type: {
             option: "u64";
@@ -5139,6 +5145,12 @@ export type ClubProgram = {
             };
           },
           {
+            name: "treasuryChain";
+            type: {
+              defined: "TreasuryChain";
+            };
+          },
+          {
             name: "crossChainDenominatedCurrency";
             type: {
               option: "string";
@@ -6405,6 +6417,20 @@ export type ClubProgram = {
       };
     },
     {
+      name: "TreasuryChain";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Solana";
+          },
+          {
+            name: "Ethereum";
+          }
+        ];
+      };
+    },
+    {
       name: "Rarity";
       type: {
         kind: "enum";
@@ -6453,19 +6479,19 @@ export type ClubProgram = {
             name: "DepositPayload";
             fields: [
               {
-                name: "club_data";
+                name: "_club_data";
                 type: {
                   array: ["u8", 32];
                 };
               },
               {
-                name: "member_address";
+                name: "_member_address";
                 type: {
                   array: ["u8", 32];
                 };
               },
               {
-                name: "deposit_amount";
+                name: "_deposit_amount";
                 type: "u32";
               }
             ];
@@ -7743,6 +7769,12 @@ export const IDL: ClubProgram = {
             vec: {
               defined: "SellPermissionDto",
             },
+          },
+        },
+        {
+          name: "treasuryChain",
+          type: {
+            defined: "TreasuryChain",
           },
         },
         {
@@ -12616,6 +12648,12 @@ export const IDL: ClubProgram = {
             },
           },
           {
+            name: "treasuryChain",
+            type: {
+              defined: "TreasuryChain",
+            },
+          },
+          {
             name: "crossChainDenominatedCurrency",
             type: {
               option: "string",
@@ -13882,6 +13920,20 @@ export const IDL: ClubProgram = {
       },
     },
     {
+      name: "TreasuryChain",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Solana",
+          },
+          {
+            name: "Ethereum",
+          },
+        ],
+      },
+    },
+    {
       name: "Rarity",
       type: {
         kind: "enum",
@@ -13930,19 +13982,19 @@ export const IDL: ClubProgram = {
             name: "DepositPayload",
             fields: [
               {
-                name: "club_data",
+                name: "_club_data",
                 type: {
                   array: ["u8", 32],
                 },
               },
               {
-                name: "member_address",
+                name: "_member_address",
                 type: {
                   array: ["u8", 32],
                 },
               },
               {
-                name: "deposit_amount",
+                name: "_deposit_amount",
                 type: "u32",
               },
             ],

@@ -26,6 +26,7 @@ import {
 import shortUUID from "short-uuid";
 import {
   accountGovernanceSeed,
+  escrowProgram,
   financialRecordSeed,
   fundraiseCfgSeed,
   getEthereumHexFormat,
@@ -367,7 +368,7 @@ describe("it should create club with treasury on ethereum", async () => {
       ClubAction.CastVote
     );
 
-    const castVoteIx = await castProposalVote(
+    await castProposalVote(
       clubProgram,
       clubPda,
       realmPda,
@@ -400,6 +401,8 @@ describe("it should create club with treasury on ethereum", async () => {
         { isSigner: false, isWritable: true, pubkey: proposalMetadata },
         { isSigner: false, isWritable: true, pubkey: proposalAddress },
         { isSigner: false, isWritable: true, pubkey: proposalInstruction },
+        { isSigner: false, isWritable: true, pubkey: governanceAccount },
+        { isSigner: false, isWritable: false, pubkey: escrowProgram },
       ],
       wormholeProgramId
     );

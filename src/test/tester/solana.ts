@@ -273,7 +273,14 @@ export const createGovernance = async (
   );
 
   const createGovernanceIX = await program.methods
-    .createTreasuryGovernance(86400 * 7 + 1, 55, [], null, ethDenomCurr)
+    .createTreasuryGovernance(
+      86400 * 7 + 1,
+      55,
+      [],
+      { ethereum: {} },
+      null,
+      ethDenomCurr
+    )
     .accounts({
       treasuryData: treasuryDataPda,
       clubData: clubAddress,
