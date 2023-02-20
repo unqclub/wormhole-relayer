@@ -26,12 +26,11 @@ import {
   ChainId,
   CHAIN_ID_ETH,
   CHAIN_ID_SOLANA,
+  ParsedVaa,
   parseVaa,
 } from "@certusone/wormhole-sdk";
 import { emitMessageOnSolana } from "../helpers/solana/methods";
 import pluginConf from "../../unqPluginConfig.json";
-import treasuryAbi from "../abi/UnqTreasury.json";
-import { wormholeProgram } from "../helpers/utilities";
 type VAA = string;
 
 export interface UnqRelayerPluginConfig {
@@ -111,6 +110,8 @@ export class UnqPlugin implements Plugin<any> {
     const vaa = Buffer.from(workflow.data, "base64");
     const parsedVaa = parseVaa(vaa);
 
+    console.log(parsedVaa.payload.byteLength, "MESSAGE LENGTH");
+
     switch (parsedVaa.emitterChain) {
       case CHAIN_ID_SOLANA: {
         await submitOnEnv(
@@ -123,7 +124,7 @@ export class UnqPlugin implements Plugin<any> {
         break;
       }
       case CHAIN_ID_ETH: {
-        await submitOnSolana(parsedVaa.payload, execute);
+        await submitOnSolana(parsedVaa, execute, vaa);
         break;
       }
       default: {
@@ -172,36 +173,24 @@ async function submitOnEnv(
     chainId,
     f: async ({ wallet }) => {
       return wormholeUnqContract.connect(wallet).parseVM(Buffer.from(vaa), {
-        gasLimit: 10000001,
+        gasLimit: 1000000,
       });
     },
   });
   await tx.wait();
-
-  wormholeUnqContract.on(
-    "TreasuryCreatedEvent",
-    async (realm, authority, parsedDenominatedCurrency, treasuryAddress) => {
-      console.log("REALM:", realm);
-      console.log("AUTHORITY:", authority);
-      console.log("PARSED DENN:", parsedDenominatedCurrency);
-
-      const treasuryContract = new ethers.Contract(
-        treasuryAddress,
-        treasuryAbi.abi,
-        network
-      );
-
-      const denominatedCurrency =
-        await treasuryContract.getDenominatedCurrency();
-      console.log("DENOMINATED CURRENCY:", denominatedCurrency);
-    }
-  );
 }
 
-export const submitOnSolana = async (vaa: any, executor: ActionExecutor) => {
+export const submitOnSolana = async (
+  vaa: ParsedVaa,
+  executor: ActionExecutor,
+  rawVaa: Buffer
+) => {
   await executor.onSolana(async ({ wallet }) => {
     return Promise.resolve(
-      realyIxOnSolana(await emitMessageOnSolana(vaa, wallet.payer), wallet)
+      realyIxOnSolana(
+        await emitMessageOnSolana(rawVaa, wallet.payer, vaa),
+        wallet
+      )
     );
   });
 };
@@ -219,5 +208,10 @@ export const realyIxOnSolana = async (
   const versionedTx = new VersionedTransaction(tx);
   versionedTx.sign([wallet.payer]);
 
-  await wallet.conn.sendRawTransaction(versionedTx.serialize());
+  try {
+    const tx = await wallet.conn.sendRawTransaction(versionedTx.serialize());
+    console.log("TX SIG:", tx);
+  } catch (error) {
+    console.log(error);
+  }
 };
