@@ -10,6 +10,6 @@ RUN npm install
 
 EXPOSE 6379
 
-RUN npm run start:prod
+RUN npm run start
 
 

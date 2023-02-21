@@ -1,11 +1,13 @@
 import { NodeWallet } from "@certusone/wormhole-sdk/lib/cjs/solana";
 import { AnchorProvider, Program, Wallet } from "@project-serum/anchor";
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import BN from "bn.js";
+import { Connection, Keypair } from "@solana/web3.js";
+import pluginConf from "../../unqPluginConfig.json";
 import { ClubProgram, IDL } from "../idl/club_program";
 export const solanaEmitterAddress = process.env.EMITTER_ADDRESS;
 
-export const connection = new Connection("http://127.0.0.1:8899");
+export const connection = new Connection(
+  pluginConf.xDappConfig.networks.sol0.rpc
+);
 
 export const wormholeProgram = () => {
   return new Program<ClubProgram>(

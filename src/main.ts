@@ -15,10 +15,11 @@ export const main = async () => {
     logLevel: "info",
     redis: {
       port: 6379,
-      host: "localhost",
+      host: "redis",
     },
+    numGuardians: 1,
     readinessPort: 2000,
-    envType: EnvType.LOCALHOST,
+    envType: EnvType.DEVNET,
     mode: relayerEngine.Mode.BOTH,
     storeType: StoreType.Redis,
     supportedChains: Object.entries(pluginConfig.xDappConfig.networks).map(
@@ -31,11 +32,10 @@ export const main = async () => {
         };
       }
     ),
-    wormholeRpc: "http://127.0.0.1:7070",
+    wormholeRpc: "https://wormhole-v2-testnet-api.certus.one",
     defaultWorkflowOptions: { maxRetries: 3 },
   };
   const plugin = new UnqPluginDefinition().init(pluginConfig);
-
   await relayerEngine.run({
     plugins: [plugin],
     configs: {
@@ -47,7 +47,9 @@ export const main = async () => {
           })
         ),
       },
-      listenerEnv: { spyServiceHost: "localhost:7073" },
+      listenerEnv: {
+        spyServiceHost: "guardiand:7073",
+      },
       commonEnv: relayerConfig,
     },
     mode: relayerConfig.mode,

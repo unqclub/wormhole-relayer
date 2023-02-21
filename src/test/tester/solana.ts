@@ -58,7 +58,7 @@ export const initOgRealm = async (
   mint: PublicKey,
   connection: Connection
 ) => {
-  const createRealmIx = [];
+  const createRealmIx: any[] = [];
 
   const realm = await SplGovernance.withCreateRealm(
     createRealmIx,
@@ -198,6 +198,7 @@ export const createClub = async (
     };
   } catch (error) {
     console.log(error);
+    throw error;
   }
 };
 

@@ -28,6 +28,7 @@ import {
   CHAIN_ID_SOLANA,
   ParsedVaa,
   parseVaa,
+  tryUint8ArrayToNative,
 } from "@certusone/wormhole-sdk";
 import { emitMessageOnSolana } from "../helpers/solana/methods";
 import pluginConf from "../../unqPluginConfig.json";
@@ -83,6 +84,11 @@ export class UnqPlugin implements Plugin<any> {
     | { workflowData: string; workflowOptions?: WorkflowOptions | undefined }
     | undefined
   > {
+    const emitterAddress = tryUint8ArrayToNative(vaa.emitterAddress, "solana");
+    console.log(emitterAddress, "EMITTER ADDRESS SOLANA");
+
+    console.log("CONSUMED EVENT");
+
     return Promise.resolve({
       workflowData: vaa.bytes.toString("base64"),
       chainID: vaa.emitterChain,
@@ -93,6 +99,7 @@ export class UnqPlugin implements Plugin<any> {
     _providers: Providers,
     _listenerResources?: { eventSource: EventSource; db: StagingAreaKeyLock }
   ): Promise<void> {
+    this.logger.debug("Initialized UNQ relayer....");
     return new Promise((resolve) => resolve());
   }
 
@@ -109,8 +116,6 @@ export class UnqPlugin implements Plugin<any> {
   ): Promise<void> {
     const vaa = Buffer.from(workflow.data, "base64");
     const parsedVaa = parseVaa(vaa);
-
-    console.log(parsedVaa.payload.byteLength, "MESSAGE LENGTH");
 
     switch (parsedVaa.emitterChain) {
       case CHAIN_ID_SOLANA: {
@@ -161,7 +166,9 @@ async function submitOnEnv(
   executor: ActionExecutor,
   chainId: ChainId
 ) {
-  const network = new ethers.providers.JsonRpcProvider("HTTP://127.0.0.1:8545");
+  const network = new ethers.providers.JsonRpcProvider(
+    pluginConf.xDappConfig.networks.evm0.rpc
+  );
 
   const wormholeUnqContract = new ethers.Contract(
     ethContractAddress,
@@ -210,7 +217,6 @@ export const realyIxOnSolana = async (
 
   try {
     const tx = await wallet.conn.sendRawTransaction(versionedTx.serialize());
-    console.log("TX SIG:", tx);
   } catch (error) {
     console.log(error);
   }

@@ -235,7 +235,9 @@ describe("it should create club with treasury on ethereum", async () => {
       wallet.publicKey.toString()
     );
     assert.equal(
-      financialRecordAccount.depositRecords[0].accumulatedAmount.toNumber(),
+      (
+        financialRecordAccount.depositRecords as any
+      )[0].accumulatedAmount.toNumber(),
       2 * LAMPORTS_PER_SOL
     );
 
