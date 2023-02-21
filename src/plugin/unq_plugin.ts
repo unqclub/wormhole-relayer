@@ -24,7 +24,7 @@ import { PluginDefinition } from "relayer-engine";
 import { ethers } from "ethers";
 import {
   ChainId,
-  CHAIN_ID_ETH,
+  CHAIN_ID_POLYGON,
   CHAIN_ID_SOLANA,
   ParsedVaa,
   parseVaa,
@@ -84,11 +84,7 @@ export class UnqPlugin implements Plugin<any> {
     | { workflowData: string; workflowOptions?: WorkflowOptions | undefined }
     | undefined
   > {
-    const emitterAddress = tryUint8ArrayToNative(vaa.emitterAddress, "solana");
-    console.log(emitterAddress, "EMITTER ADDRESS SOLANA");
-
-    console.log("CONSUMED EVENT");
-
+    this.logger.info("Consumed new event...");
     return Promise.resolve({
       workflowData: vaa.bytes.toString("base64"),
       chainID: vaa.emitterChain,
@@ -124,11 +120,11 @@ export class UnqPlugin implements Plugin<any> {
           pluginConf.spyServiceFilters[1].emitterAddress,
           providers,
           execute,
-          CHAIN_ID_ETH
+          CHAIN_ID_POLYGON
         );
         break;
       }
-      case CHAIN_ID_ETH: {
+      case CHAIN_ID_POLYGON: {
         await submitOnSolana(parsedVaa, execute, vaa);
         break;
       }

@@ -11,15 +11,15 @@
       "emitterAddress": "EMssAbHYgBGgxoRNfnv7xuv7tSrKabrVowG6aKUtysWr"
     },
     {
-      "chainId": 2,
-      "emitterAddress": "0xc0293F0782D17AfB65113AeFFAa4B5A590a31684"
+      "chainId": 5,
+      "emitterAddress": "0x985A61A84C09418ee46b6c3a04cb0C1ed61Fd2dA"
     }
   ],
   "xDappConfig": {
     "networks": {
       "evm0": {
         "type": "evm",
-        "wormholeChainId": 2,
+        "wormholeChainId": 5,
         "rpc": "https://polygon-mumbai.g.alchemy.com/v2/qBycdF3bdGGhRb8tKel6S3n_iUMr7No1",
         "privateKey": "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d",
         "bridgeAddress": "0x0CBE91CF822c73C2315FB05100C2F714765d5c20"

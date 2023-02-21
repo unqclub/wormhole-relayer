@@ -23,8 +23,9 @@
     "chai": "^4.3.7",
     "ethers": "^5.7.2",
     "fs": "^0.0.1-security",
-    "relayer-engine": "wormhole-foundation/relayer-engine",
     "mocha": "^10.2.0",
+    "node-fetch": "^3.3.0",
+    "relayer-engine": "wormhole-foundation/relayer-engine",
     "short-uuid": "^4.2.2",
     "ts-mocha": "^10.0.0",
     "winston": "^3.8.2"
