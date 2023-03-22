@@ -1,42 +1,75 @@
-import fetch from "node-fetch";
+const BASE_URL = process.env.API_ENDPOINT;
 
-export type METHOD = "GET" | "POST";
+export const RELAYER_URL = process.env.REACT_APP_RELAYER_ENDPOINT as string;
 
-const API_ENDPOINT = process.env.API_ENDPOINT as string;
+class HttpError {
+  constructor(public response: Response) {}
+}
 
-export const makeRequest = async (
-  method: METHOD,
+export function post<T = any>(
   path: string,
-  body?: any
-): Promise<any> => {
-  if (method === "GET") {
-    return await (await fetch(path, { method })).json();
-  } else {
-    return await (
-      await fetch(path, {
-        method,
-        body: JSON.stringify(body),
-      })
-    ).json();
-  }
-};
+  data: Record<string, any>
+): Promise<T> {
+  return makeRequest("POST", path, data);
+}
 
-export const get = async (path: string, url?: string): Promise<any> => {
-  if (url) {
-    return await makeRequest("GET", `${url}/${path}`);
-  } else {
-    return await makeRequest("GET", `${API_ENDPOINT}/${path}`);
-  }
-};
+export function postQuickNode<T = any>(data: Record<string, any>): Promise<T> {
+  return makeRequest("POST", undefined, data, true);
+}
 
-export const post = async (
+export function put<T = any>(
   path: string,
-  body: any,
-  url?: string
-): Promise<any> => {
-  if (url) {
-    return await makeRequest("POST", `${url}/${path}`, body);
-  } else {
-    return await makeRequest("POST", `${API_ENDPOINT}/${path}`, body);
+  data: Record<string, any>
+): Promise<T> {
+  return makeRequest("PUT", path, data);
+}
+
+export function patch<T = any>(
+  path: string,
+  data: Record<string, any>
+): Promise<T> {
+  return makeRequest("PATCH", path, data);
+}
+
+export function deleteReq<T = any>(
+  path: string,
+  data: Record<string, any>
+): Promise<T> {
+  return makeRequest("DELETE", path, data);
+}
+
+export function get<T = any>(path: string): Promise<T> {
+  return makeRequest("GET", path);
+}
+
+type HttpMethod = "POST" | "GET" | "PUT" | "PATCH" | "DELETE";
+
+export async function makeRequest(
+  method: HttpMethod,
+  path?: string,
+  data?: Record<string, any>,
+  quickNode?: boolean,
+  customBaseUrl?: string
+) {
+  let response;
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    Accept: "application/json, */*",
+  };
+
+  const requestInit: RequestInit = {
+    method,
+    headers,
+  };
+
+  if (data) {
+    requestInit.body = JSON.stringify(data);
   }
-};
+
+  response = await fetch(`${customBaseUrl ?? BASE_URL}${path}`, requestInit);
+
+  if (method === "DELETE") {
+    return response;
+  }
+  return response.json();
+}

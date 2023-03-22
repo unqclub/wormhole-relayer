@@ -2,10 +2,7 @@ import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import { SolanaWallet } from "relayer-engine";
 import { ParsedVaa, tryUint8ArrayToNative } from "@certusone/wormhole-sdk";
 import { Program } from "@project-serum/anchor";
-import {
-
-  AccountMeta,
-} from "@solana/web3.js";
+import { AccountMeta } from "@solana/web3.js";
 import { ClubProgram } from "../../idl/club_program";
 import {
   financialRecordSeed,
@@ -17,6 +14,7 @@ import {
 } from "../../test/helpers";
 import { WormholePayloadAction, wormholeProgram } from "../utilities";
 import * as ethers from "ethers";
+import { EvmToSolanaAction } from "../../api/wormhole-vaa/wormhole-vaa";
 
 export async function emitMessageOnSolana(
   vaa: Buffer,
@@ -51,14 +49,14 @@ export const getInstructionRemainingAccounts = async (
   payload: Buffer,
   program: Program<ClubProgram>
 ) => {
-  const action = payload[0] as WormholePayloadAction;
+  const action = payload[0] as EvmToSolanaAction;
 
   const remainingAccounts: AccountMeta[] = [];
   let clubData: PublicKey;
   let financialRecord: PublicKey;
 
   switch (action) {
-    case WormholePayloadAction.DepositEvent: {
+    case EvmToSolanaAction.Deposit: {
       const rawClubAddress = payload.subarray(1, 33);
       clubData = new PublicKey(tryUint8ArrayToNative(rawClubAddress, "solana"));
       const rawMemberAddress = payload.subarray(33, 65);
@@ -138,7 +136,69 @@ export const getInstructionRemainingAccounts = async (
           pubkey: fundraiseConfigAddress,
         }
       );
+      break;
+    }
+    case EvmToSolanaAction.SellShares: {
+      clubData = new PublicKey(
+        tryUint8ArrayToNative(payload.subarray(1, 33), "solana")
+      );
+      const treasuryData = new PublicKey(
+        tryUint8ArrayToNative(payload.subarray(33, 65), "solana")
+      );
+
+      const financialOffer = new PublicKey(
+        tryUint8ArrayToNative(payload.subarray(65, 97), "solana")
+      );
+
+      const sellerPubkey = new PublicKey(
+        tryUint8ArrayToNative(payload.subarray(97, 129), "solana")
+      );
+
+      const buyerPubkey = new PublicKey(
+        tryUint8ArrayToNative(payload.subarray(129, 161), "solana")
+      );
+
+      const [sellerFinancialRecord] = PublicKey.findProgramAddressSync(
+        [
+          unqClubSeed,
+          treasuryData.toBuffer(),
+          financialRecordSeed,
+          sellerPubkey.toBuffer(),
+        ],
+        program.programId
+      );
+
+      const [buyerFinancialRecord] = PublicKey.findProgramAddressSync(
+        [
+          unqClubSeed,
+          treasuryData.toBuffer(),
+          financialRecordSeed,
+          buyerPubkey.toBuffer(),
+        ],
+        program.programId
+      );
+
+      remainingAccounts.push({
+        isSigner: false,
+        isWritable: true,
+        pubkey: treasuryData,
+      });
+      remainingAccounts.push({
+        isSigner: false,
+        isWritable: true,
+        pubkey: financialOffer,
+      });
+      remainingAccounts.push({
+        isSigner: false,
+        isWritable: true,
+        pubkey: sellerFinancialRecord,
+      });
+      remainingAccounts.push({
+        isSigner: false,
+        isWritable: true,
+        pubkey: buyerFinancialRecord,
+      });
     }
   }
-  return { remainingAccounts, clubData, financialRecord };
+  return { remainingAccounts, clubData };
 };

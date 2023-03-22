@@ -28,12 +28,15 @@ import {
   CHAIN_ID_SOLANA,
   ParsedVaa,
   parseVaa,
-  tryUint8ArrayToNative,
 } from "@certusone/wormhole-sdk";
+import { storeVaaInDatabase } from "../helpers/api.helpers";
 import { emitMessageOnSolana } from "../helpers/solana/methods";
 import pluginConf from "../../unqPluginConfig.json";
-import { storeVaaInDatabase } from "src/helpers/api.helpers";
-import { WormholeVaaStatus } from "src/api/wormhole-vaa/wormhole-vaa";
+import {
+  EvmToSolanaAction,
+  WormholeAction,
+  WormholeVaaStatus,
+} from "../api/wormhole-vaa/wormhole-vaa";
 type VAA = string;
 
 export interface UnqRelayerPluginConfig {
@@ -193,18 +196,28 @@ export const submitOnSolana = async (
   executor: ActionExecutor,
   rawVaa: Buffer
 ) => {
+  const action = vaa.payload[0] as EvmToSolanaAction;
   try {
-    await executor.onSolana(async ({ wallet }) => {
-      return Promise.resolve(
-        realyIxOnSolana(
-          await emitMessageOnSolana(rawVaa, wallet.payer, vaa),
-          wallet
-        )
-      );
-    });
+    switch (action) {
+      case EvmToSolanaAction.Deposit: {
+        await executor.onSolana(async ({ wallet }) => {
+          return Promise.resolve(
+            realyIxOnSolana(
+              await emitMessageOnSolana(rawVaa, wallet.payer, vaa),
+              wallet
+            )
+          );
+        });
+        break;
+      }
+    }
     await storeVaaInDatabase(vaa, WormholeVaaStatus.Succeded);
   } catch (error) {
-    await storeVaaInDatabase(vaa, WormholeVaaStatus.Failed);
+    await storeVaaInDatabase(
+      vaa,
+      WormholeVaaStatus.Failed,
+      WormholeAction.Deposit
+    );
   }
 };
 

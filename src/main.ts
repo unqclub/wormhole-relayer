@@ -1,16 +1,19 @@
-import { Logger } from "winston";
 import * as relayerEngine from "relayer-engine";
 import {
   UnqPluginDefinition,
   UnqRelayerPluginConfig,
 } from "./plugin/unq_plugin";
-import express from "express";
 
 import { EnvType, StoreType } from "relayer-engine";
+import { retryVaa } from "./helpers/api.helpers";
+import express from "express";
+import bodyParser from "body-parser";
 export const main = async () => {
   const pluginConfig = (await relayerEngine.loadFileAndParseToObject(
     `./unqPluginConfig.json`
   )) as UnqRelayerPluginConfig;
+
+  const app = express();
 
   const relayerConfig = {
     logLevel: "info",
@@ -34,14 +37,10 @@ export const main = async () => {
       }
     ),
     wormholeRpc: "https://wormhole-v2-testnet-api.certus.one",
-    defaultWorkflowOptions: { maxRetries: 3 },
+    defaultWorkflowOptions: { maxRetries: 2 },
   };
   const plugin = new UnqPluginDefinition().init(pluginConfig);
-  const app = express();
-  app.listen(5500, () => {
-    console.log("Server started....");
-  });
-  app.get("/retry", (req, res) => {});
+
   await relayerEngine.run({
     plugins: [plugin],
     configs: {
@@ -59,6 +58,13 @@ export const main = async () => {
       commonEnv: relayerConfig,
     },
     mode: relayerConfig.mode,
+  });
+  app.listen(5500, async () => {
+    console.log("Server started....");
+  });
+  app.use(bodyParser.json());
+  app.post("/retry", async (req, res) => {
+    await retryVaa(req);
   });
 };
 

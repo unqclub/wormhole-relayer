@@ -6,16 +6,17 @@ services:
     ports:
       - 6379:6379
     networks:
-      - unq-relayer-network
+      - unq-club-api_unq-club-network
   relayer:
     build:
       context: .
     container_name: unq-relayer
     image: wormhole-relayer
     networks:
-      - unq-relayer-network
+      - unq-club-api_unq-club-network
     ports:
       - 3003:3003
+      - 5500:5500
     command: npm run start
     depends_on:
     - redis
@@ -27,11 +28,11 @@ services:
       - 7073:7073
     command: spy --nodeKey /node.key --spyRPC "[::]:7073" --network /wormhole/testnet/2/1 --bootstrap /dns4/wormhole-testnet-v2-bootstrap.certus.one/udp/8999/quic/p2p/12D3KooWAkB9ynDur1Jtoa97LBUp8RXdhzS5uHgAfdTquJbrbN7i
     networks:
-      - unq-relayer-network
+      - unq-club-api_unq-club-network
 
 networks:
-  unq-relayer-network:
-    driver: bridge
+  unq-club-api_unq-club-network:
+    external: true
 
  
     

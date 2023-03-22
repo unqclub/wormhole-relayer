@@ -2,6 +2,7 @@ import {
   CHAIN_ID_POLYGON,
   CHAIN_ID_SOLANA,
   parseVaa,
+  SignedVaa,
   tryUint8ArrayToNative,
 } from "@certusone/wormhole-sdk";
 import { ethers } from "ethers";
@@ -10,7 +11,7 @@ import {
   saveVaa,
   WormholeAction,
   WormholeVaaStatus,
-} from "src/api/wormhole-vaa/wormhole-vaa";
+} from "../api/wormhole-vaa/wormhole-vaa";
 import pluginConf from "../../unqPluginConfig.json";
 import treasuryAbi from "../abi/WormholeUnq.json";
 
@@ -19,30 +20,38 @@ import { emitMessageOnSolana } from "./solana/methods";
 
 export const storeVaaInDatabase = async (
   vaa: any,
-  status: WormholeVaaStatus
+  status: WormholeVaaStatus,
+  failedAction?: WormholeAction
 ) => {
   const deserializedVaa = parseVaa(Buffer.from(vaa, "base64"));
-  const action = deserializedVaa.payload[0] as WormholeAction;
+  const action = failedAction ?? (deserializedVaa.payload[0] as WormholeAction);
+
+  console.log(action, "ACTIONNN");
 
   const address = tryUint8ArrayToNative(
-    deserializedVaa.payload.subarray(1, 32),
+    deserializedVaa.payload.subarray(5, 37),
     "solana"
   );
+
+  console.log("ADDRESSS:", address);
 
   const dto: IWormholeDto = {
     action: action,
     address,
     status,
-    vaa,
+    vaa: vaa.toString("base64"),
   };
 
-  await saveVaa(dto);
+  try {
+    await saveVaa(dto);
+    console.log("SENT VAA");
+  } catch (error: any) {
+    console.log(error);
+  }
 };
 
 export const retryVaa = async (req: any) => {
   try {
-    console.log("REQUEST:", req);
-
     if (!req || !req.body) {
       throw new Error("Body not present");
     }
