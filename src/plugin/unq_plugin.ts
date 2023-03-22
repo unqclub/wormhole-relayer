@@ -32,6 +32,8 @@ import {
 } from "@certusone/wormhole-sdk";
 import { emitMessageOnSolana } from "../helpers/solana/methods";
 import pluginConf from "../../unqPluginConfig.json";
+import { storeVaaInDatabase } from "src/helpers/api.helpers";
+import { WormholeVaaStatus } from "src/api/wormhole-vaa/wormhole-vaa";
 type VAA = string;
 
 export interface UnqRelayerPluginConfig {
@@ -172,15 +174,20 @@ async function submitOnEnv(
     network
   );
 
-  const tx = await executor.onEVM({
-    chainId,
-    f: async ({ wallet }) => {
-      return wormholeUnqContract.connect(wallet).parseVM(Buffer.from(vaa), {
-        gasLimit: 1000000,
-      });
-    },
-  });
-  await tx.wait();
+  try {
+    const tx = await executor.onEVM({
+      chainId,
+      f: async ({ wallet }) => {
+        return wormholeUnqContract.connect(wallet).parseVM(Buffer.from(vaa), {
+          gasLimit: 1000000,
+        });
+      },
+    });
+    await tx.wait();
+    await storeVaaInDatabase(vaa, WormholeVaaStatus.Succeded);
+  } catch (error) {
+    await storeVaaInDatabase(vaa, WormholeVaaStatus.Failed);
+  }
 }
 
 export const submitOnSolana = async (
@@ -188,14 +195,19 @@ export const submitOnSolana = async (
   executor: ActionExecutor,
   rawVaa: Buffer
 ) => {
-  await executor.onSolana(async ({ wallet }) => {
-    return Promise.resolve(
-      realyIxOnSolana(
-        await emitMessageOnSolana(rawVaa, wallet.payer, vaa),
-        wallet
-      )
-    );
-  });
+  try {
+    await executor.onSolana(async ({ wallet }) => {
+      return Promise.resolve(
+        realyIxOnSolana(
+          await emitMessageOnSolana(rawVaa, wallet.payer, vaa),
+          wallet
+        )
+      );
+    });
+    await storeVaaInDatabase(vaa, WormholeVaaStatus.Succeded);
+  } catch (error) {
+    await storeVaaInDatabase(vaa, WormholeVaaStatus.Failed);
+  }
 };
 
 export const realyIxOnSolana = async (
