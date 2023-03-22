@@ -120,7 +120,6 @@ export class UnqPlugin implements Plugin<any> {
         await submitOnEnv(
           vaa,
           pluginConf.spyServiceFilters[1].emitterAddress,
-          providers,
           execute,
           CHAIN_ID_POLYGON
         );
@@ -157,10 +156,9 @@ export class UnqPluginDefinition
   pluginName: string;
 }
 
-async function submitOnEnv(
+export async function submitOnEnv(
   vaa: any,
   ethContractAddress: string,
-  providers: Providers,
   executor: ActionExecutor,
   chainId: ChainId
 ) {

@@ -4,6 +4,7 @@ import {
   UnqPluginDefinition,
   UnqRelayerPluginConfig,
 } from "./plugin/unq_plugin";
+import express from "express";
 
 import { EnvType, StoreType } from "relayer-engine";
 export const main = async () => {
@@ -36,6 +37,11 @@ export const main = async () => {
     defaultWorkflowOptions: { maxRetries: 3 },
   };
   const plugin = new UnqPluginDefinition().init(pluginConfig);
+  const app = express();
+  app.listen(5500, () => {
+    console.log("Server started....");
+  });
+  app.get("/retry", (req, res) => {});
   await relayerEngine.run({
     plugins: [plugin],
     configs: {

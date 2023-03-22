@@ -10,6 +10,8 @@ RUN npm install
 
 EXPOSE 6379
 
+EXPOSE 3300
+
 RUN npm run start
 
 
