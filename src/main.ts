@@ -8,6 +8,7 @@ import { EnvType, StoreType } from "relayer-engine";
 import { retryVaa } from "./helpers/api.helpers";
 import express from "express";
 import bodyParser from "body-parser";
+import cors from "cors";
 export const main = async () => {
   const pluginConfig = (await relayerEngine.loadFileAndParseToObject(
     `./unqPluginConfig.json`
@@ -62,9 +63,11 @@ export const main = async () => {
   app.listen(5500, async () => {
     console.log("Server started....");
   });
+  app.use(cors());
   app.use(bodyParser.json());
   app.post("/retry", async (req, res) => {
-    await retryVaa(req);
+    const data = await retryVaa(req);
+    res.send(data);
   });
 };
 

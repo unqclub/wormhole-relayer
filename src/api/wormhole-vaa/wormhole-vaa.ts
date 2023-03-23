@@ -2,6 +2,7 @@ import { post } from "../request.api";
 
 export const SAVE_VAA = "/save-vaa";
 export const WORMHOLE_VAAS = "/wormhole-vaas";
+export const VAA = "/vaa";
 
 export interface IWormholeDto {
   address: string;

@@ -9,14 +9,17 @@ import { ethers } from "ethers";
 import {
   IWormholeDto,
   saveVaa,
+  VAA,
   WormholeAction,
   WormholeVaaStatus,
+  WORMHOLE_VAAS,
 } from "../api/wormhole-vaa/wormhole-vaa";
 import pluginConf from "../../unqPluginConfig.json";
 import treasuryAbi from "../abi/WormholeUnq.json";
 
 import { Connection, Keypair, Transaction } from "@solana/web3.js";
 import { emitMessageOnSolana } from "./solana/methods";
+import { get, post } from "../api/request.api";
 
 export const storeVaaInDatabase = async (
   vaa: any,
@@ -26,14 +29,10 @@ export const storeVaaInDatabase = async (
   const deserializedVaa = parseVaa(Buffer.from(vaa, "base64"));
   const action = failedAction ?? (deserializedVaa.payload[0] as WormholeAction);
 
-  console.log(action, "ACTIONNN");
-
   const address = tryUint8ArrayToNative(
     deserializedVaa.payload.subarray(5, 37),
     "solana"
   );
-
-  console.log("ADDRESSS:", address);
 
   const dto: IWormholeDto = {
     action: action,
@@ -44,7 +43,6 @@ export const storeVaaInDatabase = async (
 
   try {
     await saveVaa(dto);
-    console.log("SENT VAA");
   } catch (error: any) {
     console.log(error);
   }
@@ -55,17 +53,25 @@ export const retryVaa = async (req: any) => {
     if (!req || !req.body) {
       throw new Error("Body not present");
     }
-    const parsedRequest = JSON.parse(req.body);
+
+    const parsedRequest = req.body;
+    console.log(parsedRequest);
+    const storedVaa = await getByVaa(parsedRequest.vaa, parsedRequest.address);
+    if (!storedVaa || storedVaa.status === WormholeVaaStatus.Succeded) {
+      console.log("VAA processed");
+      return;
+    }
     const vaa = Buffer.from(parsedRequest.vaa, "base64");
     const parsedVaa = parseVaa(vaa);
 
     switch (parsedVaa.emitterChain) {
       case CHAIN_ID_SOLANA: {
-        const wallet = new ethers.Wallet(
-          pluginConf.xDappConfig.networks.evm0.privateKey
-        );
         const network = new ethers.providers.JsonRpcProvider(
           pluginConf.xDappConfig.networks.evm0.rpc
+        );
+        const wallet = new ethers.Wallet(
+          pluginConf.xDappConfig.networks.evm0.privateKey,
+          network
         );
 
         const contract = new ethers.Contract(
@@ -77,7 +83,13 @@ export const retryVaa = async (req: any) => {
         await contract.connect(wallet).parseVM(Buffer.from(vaa), {
           gasLimit: 1000000,
         });
-        break;
+
+        storedVaa.status = WormholeVaaStatus.Succeded;
+        console.log(storedVaa);
+
+        await saveVaa(storedVaa);
+
+        return JSON.stringify({ message: "Successfully stored vaa" });
       }
       case CHAIN_ID_POLYGON: {
         const RPC_CONNECTION = new Connection(
@@ -98,15 +110,28 @@ export const retryVaa = async (req: any) => {
 
         tx.sign(wallet);
 
+        storedVaa.status = WormholeVaaStatus.Succeded;
+
+        await saveVaa(storedVaa);
         await RPC_CONNECTION.sendRawTransaction(tx.serialize(), {
           preflightCommitment: "confirmed",
         });
-
-        break;
+        return JSON.stringify({ message: "Successfully stored vaa" });
       }
       default: {
         console.log("FAILED");
       }
     }
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+
+    return JSON.stringify({ message: "Failed to store VAA" });
+  }
+};
+
+export const getByVaa = async (
+  vaa: string,
+  address: string
+): Promise<IWormholeDto> => {
+  return post(`${WORMHOLE_VAAS}${VAA}`, { vaa: vaa, address: address });
 };
