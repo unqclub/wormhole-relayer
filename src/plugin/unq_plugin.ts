@@ -188,6 +188,7 @@ export async function submitOnEnv(
     await tx.wait();
     await storeVaaInDatabase(vaa, WormholeVaaStatus.Succeded, Chain.Ethereum);
   } catch (error) {
+    console.log(error);
     await storeVaaInDatabase(vaa, WormholeVaaStatus.Failed, Chain.Ethereum);
   }
 }
@@ -199,19 +200,14 @@ export const submitOnSolana = async (
 ) => {
   const action = vaa.payload[0] as EvmToSolanaAction;
   try {
-    switch (action) {
-      case EvmToSolanaAction.Deposit: {
-        await executor.onSolana(async ({ wallet }) => {
-          return Promise.resolve(
-            realyIxOnSolana(
-              await emitMessageOnSolana(rawVaa, wallet.payer, vaa),
-              wallet
-            )
-          );
-        });
-        break;
-      }
-    }
+    await executor.onSolana(async ({ wallet }) => {
+      return Promise.resolve(
+        realyIxOnSolana(
+          await emitMessageOnSolana(rawVaa, wallet.payer, vaa),
+          wallet
+        )
+      );
+    });
     await storeVaaInDatabase(rawVaa, WormholeVaaStatus.Succeded, Chain.Solana);
   } catch (error) {
     await storeVaaInDatabase(rawVaa, WormholeVaaStatus.Failed, Chain.Solana);
@@ -232,7 +228,8 @@ export const realyIxOnSolana = async (
   versionedTx.sign([wallet.payer]);
 
   try {
-    await wallet.conn.sendRawTransaction(versionedTx.serialize());
+    const tx = await wallet.conn.sendRawTransaction(versionedTx.serialize());
+    await wallet.conn.confirmTransaction(tx);
   } catch (error) {
     throw error;
   }

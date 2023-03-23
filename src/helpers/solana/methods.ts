@@ -12,8 +12,7 @@ import {
   unqClubMemberSeed,
   unqClubSeed,
 } from "../../test/helpers";
-import { WormholePayloadAction, wormholeProgram } from "../utilities";
-import * as ethers from "ethers";
+import { wormholeProgram } from "../utilities";
 import { EvmToSolanaAction } from "../../api/wormhole-vaa/wormhole-vaa";
 
 export async function emitMessageOnSolana(
@@ -41,6 +40,7 @@ export async function emitMessageOnSolana(
 
     return receiveWormholeMessageIx;
   } catch (error) {
+    console.log(error);
     throw error;
   }
 }
@@ -139,10 +139,17 @@ export const getInstructionRemainingAccounts = async (
       break;
     }
     case EvmToSolanaAction.SellShares: {
-      clubData = new PublicKey(
+      const treasuryData = new PublicKey(
         tryUint8ArrayToNative(payload.subarray(1, 33), "solana")
       );
-      const treasuryData = new PublicKey(
+
+      const treasuryDataAccount = await program.account.treasuryData.fetch(
+        treasuryData
+      );
+
+      clubData = treasuryDataAccount.clubData;
+
+      const buyerPubkey = new PublicKey(
         tryUint8ArrayToNative(payload.subarray(33, 65), "solana")
       );
 
@@ -152,10 +159,6 @@ export const getInstructionRemainingAccounts = async (
 
       const sellerPubkey = new PublicKey(
         tryUint8ArrayToNative(payload.subarray(97, 129), "solana")
-      );
-
-      const buyerPubkey = new PublicKey(
-        tryUint8ArrayToNative(payload.subarray(129, 161), "solana")
       );
 
       const [sellerFinancialRecord] = PublicKey.findProgramAddressSync(
@@ -197,6 +200,11 @@ export const getInstructionRemainingAccounts = async (
         isSigner: false,
         isWritable: true,
         pubkey: buyerFinancialRecord,
+      });
+      remainingAccounts.push({
+        isSigner: false,
+        isWritable: true,
+        pubkey: buyerPubkey,
       });
     }
   }

@@ -133,9 +133,13 @@ export const retryVaa = async (req: any) => {
 
         storedVaa.status = WormholeVaaStatus.Succeded;
 
-        await RPC_CONNECTION.sendRawTransaction(tx.serialize(), {
-          preflightCommitment: "confirmed",
-        });
+        const retriedTx = await RPC_CONNECTION.sendRawTransaction(
+          tx.serialize(),
+          {
+            preflightCommitment: "confirmed",
+          }
+        );
+        await RPC_CONNECTION.confirmTransaction(retriedTx);
         await saveVaa(storedVaa);
         return JSON.stringify({ message: "Successfully stored vaa" });
       }
