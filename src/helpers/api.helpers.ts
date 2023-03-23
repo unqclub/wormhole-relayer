@@ -7,6 +7,7 @@ import {
 } from "@certusone/wormhole-sdk";
 import { ethers } from "ethers";
 import {
+  Chain,
   IWormholeDto,
   saveVaa,
   VAA,
@@ -24,22 +25,40 @@ import { get, post } from "../api/request.api";
 export const storeVaaInDatabase = async (
   vaa: any,
   status: WormholeVaaStatus,
+  chain: Chain,
   failedAction?: WormholeAction
 ) => {
   const deserializedVaa = parseVaa(Buffer.from(vaa, "base64"));
-  const action = failedAction ?? (deserializedVaa.payload[0] as WormholeAction);
+  console.log(deserializedVaa.payload);
+
+  let action = failedAction ?? (deserializedVaa.payload[0] as WormholeAction);
+
+  if (chain === Chain.Solana && action === WormholeAction.CreateTreasury) {
+    action = WormholeAction.Deposit;
+  } else if (chain === Chain.Solana && action === WormholeAction.AddMember) {
+    action = WormholeAction.SellShares;
+  }
 
   const address = tryUint8ArrayToNative(
     deserializedVaa.payload.subarray(5, 37),
     "solana"
   );
 
+  const memberAddress = tryUint8ArrayToNative(
+    deserializedVaa.payload.subarray(33, 65),
+    "solana"
+  );
+
+  console.log(memberAddress, "MEMBER");
+
   const dto: IWormholeDto = {
     action: action,
-    address,
+    address: chain === Chain.Ethereum ? address : memberAddress,
     status,
     vaa: vaa.toString("base64"),
   };
+
+  console.log("DTO:", dto);
 
   try {
     await saveVaa(dto);
@@ -104,6 +123,8 @@ export const retryVaa = async (req: any) => {
         const ix = await emitMessageOnSolana(vaa, wallet, parsedVaa);
         const tx = new Transaction({
           feePayer: wallet.publicKey,
+          recentBlockhash: (await RPC_CONNECTION.getLatestBlockhash())
+            .blockhash,
         });
 
         tx.add(ix);
@@ -112,14 +133,14 @@ export const retryVaa = async (req: any) => {
 
         storedVaa.status = WormholeVaaStatus.Succeded;
 
-        await saveVaa(storedVaa);
         await RPC_CONNECTION.sendRawTransaction(tx.serialize(), {
           preflightCommitment: "confirmed",
         });
+        await saveVaa(storedVaa);
         return JSON.stringify({ message: "Successfully stored vaa" });
       }
       default: {
-        console.log("FAILED");
+        console.log("Unsupported CHAIN_ID");
       }
     }
   } catch (error) {

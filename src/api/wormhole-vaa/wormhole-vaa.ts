@@ -32,3 +32,8 @@ export enum EvmToSolanaAction {
   Deposit,
   SellShares,
 }
+
+export enum Chain {
+  Solana,
+  Ethereum,
+}

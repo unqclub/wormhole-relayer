@@ -33,6 +33,7 @@ import { storeVaaInDatabase } from "../helpers/api.helpers";
 import { emitMessageOnSolana } from "../helpers/solana/methods";
 import pluginConf from "../../unqPluginConfig.json";
 import {
+  Chain,
   EvmToSolanaAction,
   WormholeAction,
   WormholeVaaStatus,
@@ -185,9 +186,9 @@ export async function submitOnEnv(
       },
     });
     await tx.wait();
-    await storeVaaInDatabase(vaa, WormholeVaaStatus.Succeded);
+    await storeVaaInDatabase(vaa, WormholeVaaStatus.Succeded, Chain.Ethereum);
   } catch (error) {
-    await storeVaaInDatabase(vaa, WormholeVaaStatus.Failed);
+    await storeVaaInDatabase(vaa, WormholeVaaStatus.Failed, Chain.Ethereum);
   }
 }
 
@@ -211,13 +212,9 @@ export const submitOnSolana = async (
         break;
       }
     }
-    await storeVaaInDatabase(vaa, WormholeVaaStatus.Succeded);
+    await storeVaaInDatabase(rawVaa, WormholeVaaStatus.Succeded, Chain.Solana);
   } catch (error) {
-    await storeVaaInDatabase(
-      vaa,
-      WormholeVaaStatus.Failed,
-      WormholeAction.Deposit
-    );
+    await storeVaaInDatabase(rawVaa, WormholeVaaStatus.Failed, Chain.Solana);
   }
 };
 
@@ -235,8 +232,8 @@ export const realyIxOnSolana = async (
   versionedTx.sign([wallet.payer]);
 
   try {
-    const tx = await wallet.conn.sendRawTransaction(versionedTx.serialize());
+    await wallet.conn.sendRawTransaction(versionedTx.serialize());
   } catch (error) {
-    console.log(error);
+    throw error;
   }
 };
