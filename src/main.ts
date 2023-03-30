@@ -54,8 +54,9 @@ export const main = async () => {
         ),
       },
       listenerEnv: {
-        spyServiceHost: "guardiand:7073",
-      },
+         spyServiceHost: `${process.env.SPY_SERVICE_HOST!}:${parseInt(
+          process.env.SPY_SERIVCE_PORT!
+        )}`,
       commonEnv: relayerConfig,
     },
     mode: relayerConfig.mode,
