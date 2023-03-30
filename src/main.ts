@@ -1,23 +1,30 @@
-import { Logger } from "winston";
-import * as relayerEngine from "../../relayer-engine";
+import * as relayerEngine from "relayer-engine";
 import {
   UnqPluginDefinition,
   UnqRelayerPluginConfig,
-  XDappConfig,
 } from "./plugin/unq_plugin";
-import { CommonPluginEnv, EnvType, StoreType } from "../../relayer-engine";
+
+import { EnvType, StoreType } from "relayer-engine";
+import { retryVaa } from "./helpers/api.helpers";
+import express from "express";
+import bodyParser from "body-parser";
+import cors from "cors";
 export const main = async () => {
   const pluginConfig = (await relayerEngine.loadFileAndParseToObject(
     `./unqPluginConfig.json`
   )) as UnqRelayerPluginConfig;
 
+  const app = express();
+
   const relayerConfig = {
     logLevel: "info",
-    redisHost: "localhost",
-    redisPort: 6379,
-    // promPort: 1340,
+    redis: {
+      port: 6379,
+      host: "redis",
+    },
+    numGuardians: 1,
     readinessPort: 2000,
-    envType: EnvType.LOCALHOST,
+    envType: EnvType.DEVNET,
     mode: relayerEngine.Mode.BOTH,
     storeType: StoreType.Redis,
     supportedChains: Object.entries(pluginConfig.xDappConfig.networks).map(
@@ -30,6 +37,8 @@ export const main = async () => {
         };
       }
     ),
+    wormholeRpc: "https://wormhole-v2-testnet-api.certus.one",
+    defaultWorkflowOptions: { maxRetries: 2 },
   };
   const plugin = new UnqPluginDefinition().init(pluginConfig);
 
@@ -44,13 +53,24 @@ export const main = async () => {
           })
         ),
       },
-      listenerEnv: { spyServiceHost: "localhost:7073" },
+      listenerEnv: {
+        spyServiceHost: "guardiand:7073",
+      },
       commonEnv: relayerConfig,
     },
     mode: relayerConfig.mode,
   });
+  app.listen(5500, async () => {
+    console.log("Server started....");
+  });
+  app.use(cors());
+  app.use(bodyParser.json());
+  app.post("/retry", async (req, res) => {
+    const data = await retryVaa(req);
+    res.send(data);
+  });
 };
 
 main().catch((err) => {
-  // console.log(err);
+  console.log(err);
 });

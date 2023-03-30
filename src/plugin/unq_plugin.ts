@@ -10,7 +10,8 @@ import {
   SolanaWallet,
   StagingAreaKeyLock,
   Workflow,
-} from "../../../relayer-engine";
+  WorkflowOptions,
+} from "relayer-engine";
 import { Logger } from "winston";
 import {
   TransactionInstruction,
@@ -19,20 +20,24 @@ import {
 } from "@solana/web3.js";
 import wormholeAbi from "../abi/WormholeUnq.json";
 import * as wormholeSdk from "@certusone/wormhole-sdk";
-import { PluginDefinition } from "../../../relayer-engine";
+import { PluginDefinition } from "relayer-engine";
 import { ethers } from "ethers";
 import {
   ChainId,
-  CHAIN_ID_ETH,
+  CHAIN_ID_POLYGON,
   CHAIN_ID_SOLANA,
-  hexToUint8Array,
+  ParsedVaa,
   parseVaa,
-  tryNativeToHexString,
 } from "@certusone/wormhole-sdk";
+import { storeVaaInDatabase } from "../helpers/api.helpers";
 import { emitMessageOnSolana } from "../helpers/solana/methods";
 import pluginConf from "../../unqPluginConfig.json";
-import treasuryAbi from "../abi/UnqTreasury.json";
-import { wormholeProgram } from "../helpers/utilities";
+import {
+  Chain,
+  EvmToSolanaAction,
+  WormholeAction,
+  WormholeVaaStatus,
+} from "../api/wormhole-vaa/wormhole-vaa";
 type VAA = string;
 
 export interface UnqRelayerPluginConfig {
@@ -62,7 +67,7 @@ export interface XDappConfig {
   };
 }
 
-export class UnqPlugin implements Plugin<VAA> {
+export class UnqPlugin implements Plugin<any> {
   pluginName: string = "UnqPlugin";
   pluginConfig: any;
   shouldSpy: boolean = true;
@@ -75,12 +80,29 @@ export class UnqPlugin implements Plugin<VAA> {
     private readonly appConfig: UnqRelayerPluginConfig,
     readonly logger: Logger
   ) {}
+  maxRetries?: number | undefined;
+  consumeEvent(
+    vaa: ParsedVaaWithBytes,
+    stagingArea: StagingAreaKeyLock,
+    providers: Providers,
+    extraData?: any[] | undefined
+  ): Promise<
+    | { workflowData: string; workflowOptions?: WorkflowOptions | undefined }
+    | undefined
+  > {
+    this.logger.info("Consumed new event...");
+    return Promise.resolve({
+      workflowData: vaa.bytes.toString("base64"),
+      chainID: vaa.emitterChain,
+    });
+  }
 
   afterSetup?(
     _providers: Providers,
     _listenerResources?: { eventSource: EventSource; db: StagingAreaKeyLock }
   ): Promise<void> {
-    return;
+    this.logger.debug("Initialized UNQ relayer....");
+    return new Promise((resolve) => resolve());
   }
 
   getFilters(): ContractFilter[] {
@@ -89,17 +111,6 @@ export class UnqPlugin implements Plugin<VAA> {
     return filters;
   }
 
-  consumeEvent(
-    vaa: ParsedVaaWithBytes,
-    _stagingArea: StagingAreaKeyLock,
-    _providers: Providers,
-    _extraData?: any[]
-  ): Promise<{ workflowData?: any; chainID: number }> {
-    return Promise.resolve({
-      workflowData: vaa.bytes,
-      chainID: vaa.emitterChain,
-    });
-  }
   async handleWorkflow(
     workflow: Workflow<any>,
     providers: Providers,
@@ -113,14 +124,13 @@ export class UnqPlugin implements Plugin<VAA> {
         await submitOnEnv(
           vaa,
           pluginConf.spyServiceFilters[1].emitterAddress,
-          providers,
           execute,
-          CHAIN_ID_ETH
+          CHAIN_ID_POLYGON
         );
         break;
       }
-      case CHAIN_ID_ETH: {
-        await submitOnSolana(parsedVaa.payload, execute);
+      case CHAIN_ID_POLYGON: {
+        await submitOnSolana(parsedVaa, execute, vaa);
         break;
       }
       default: {
@@ -135,25 +145,30 @@ export class UnqPlugin implements Plugin<VAA> {
 export class UnqPluginDefinition
   implements PluginDefinition<UnqRelayerPluginConfig, UnqPlugin>
 {
-  init(pluginConfig: any): { fn: EngineInitFn<UnqPlugin>; pluginName: string } {
+  init(pluginConfig: any): {
+    fn: EngineInitFn<UnqPlugin>;
+    pluginName: string;
+  } {
     return {
-      fn: (env, logger) => {
-        return new UnqPlugin(env, pluginConfig, logger);
-      },
       pluginName: UnqPlugin.plugin,
+      fn: (engineConfig, logger) => {
+        return new UnqPlugin(engineConfig, pluginConfig, logger);
+      },
     };
   }
+
   pluginName: string;
 }
 
-async function submitOnEnv(
+export async function submitOnEnv(
   vaa: any,
   ethContractAddress: string,
-  providers: Providers,
   executor: ActionExecutor,
   chainId: ChainId
 ) {
-  const network = new ethers.providers.JsonRpcProvider("HTTP://127.0.0.1:8545");
+  const network = new ethers.providers.JsonRpcProvider(
+    pluginConf.xDappConfig.networks.evm0.rpc
+  );
 
   const wormholeUnqContract = new ethers.Contract(
     ethContractAddress,
@@ -161,42 +176,42 @@ async function submitOnEnv(
     network
   );
 
-  const tx = await executor.onEVM({
-    chainId,
-    f: async ({ wallet }) => {
-      return wormholeUnqContract.connect(wallet).parseVM(Buffer.from(vaa), {
-        gasLimit: 10000001,
-      });
-    },
-  });
-  await tx.wait();
-
-  wormholeUnqContract.on(
-    "TreasuryCreatedEvent",
-    async (realm, authority, parsedDenominatedCurrency, treasuryAddress) => {
-      console.log("REALM:", realm);
-      console.log("AUTHORITY:", authority);
-      console.log("PARSED DENN:", parsedDenominatedCurrency);
-
-      const treasuryContract = new ethers.Contract(
-        treasuryAddress,
-        treasuryAbi.abi,
-        network
-      );
-
-      const denominatedCurrency =
-        await treasuryContract.getDenominatedCurrency();
-      console.log("DENOMINATED CURRENCY:", denominatedCurrency);
-    }
-  );
+  try {
+    const tx = await executor.onEVM({
+      chainId,
+      f: async ({ wallet }) => {
+        return wormholeUnqContract.connect(wallet).parseVM(Buffer.from(vaa), {
+          gasLimit: 1000000,
+        });
+      },
+    });
+    await tx.wait();
+    await storeVaaInDatabase(vaa, WormholeVaaStatus.Succeded, Chain.Ethereum);
+  } catch (error) {
+    console.log(error);
+    await storeVaaInDatabase(vaa, WormholeVaaStatus.Failed, Chain.Ethereum);
+  }
 }
 
-export const submitOnSolana = async (vaa: any, executor: ActionExecutor) => {
-  await executor.onSolana(async ({ wallet }) => {
-    return Promise.resolve(
-      realyIxOnSolana(await emitMessageOnSolana(vaa, wallet.payer), wallet)
-    );
-  });
+export const submitOnSolana = async (
+  vaa: ParsedVaa,
+  executor: ActionExecutor,
+  rawVaa: Buffer
+) => {
+  const action = vaa.payload[0] as EvmToSolanaAction;
+  try {
+    await executor.onSolana(async ({ wallet }) => {
+      return Promise.resolve(
+        realyIxOnSolana(
+          await emitMessageOnSolana(rawVaa, wallet.payer, vaa),
+          wallet
+        )
+      );
+    });
+    await storeVaaInDatabase(rawVaa, WormholeVaaStatus.Succeded, Chain.Solana);
+  } catch (error) {
+    await storeVaaInDatabase(rawVaa, WormholeVaaStatus.Failed, Chain.Solana);
+  }
 };
 
 export const realyIxOnSolana = async (
@@ -212,5 +227,10 @@ export const realyIxOnSolana = async (
   const versionedTx = new VersionedTransaction(tx);
   versionedTx.sign([wallet.payer]);
 
-  await wallet.conn.sendRawTransaction(versionedTx.serialize());
+  try {
+    const tx = await wallet.conn.sendRawTransaction(versionedTx.serialize());
+    await wallet.conn.confirmTransaction(tx);
+  } catch (error) {
+    throw error;
+  }
 };

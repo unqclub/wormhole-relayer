@@ -1,0 +1,38 @@
+version: '3.7'
+services:
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - 6379:6379
+    networks:
+      - unq-club-api_unq-club-network
+  relayer:
+    build:
+      context: .
+    container_name: unq-relayer
+    image: wormhole-relayer
+    networks:
+      - unq-club-api_unq-club-network
+    ports:
+      - 3003:3003
+      - 5500:5500
+    command: npm run start
+    depends_on:
+    - redis
+    - guardiand
+  guardiand:
+    image: ghcr.io/wormhole-foundation/guardiand:latest
+    platform: linux/amd64
+    ports:
+      - 7073:7073
+    command: spy --nodeKey /node.key --spyRPC "[::]:7073" --network /wormhole/testnet/2/1 --bootstrap /dns4/wormhole-testnet-v2-bootstrap.certus.one/udp/8999/quic/p2p/12D3KooWAkB9ynDur1Jtoa97LBUp8RXdhzS5uHgAfdTquJbrbN7i
+    networks:
+      - unq-club-api_unq-club-network
+
+networks:
+  unq-club-api_unq-club-network:
+    external: true
+
+ 
+    
