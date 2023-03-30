@@ -19,8 +19,8 @@ export const main = async () => {
   const relayerConfig = {
     logLevel: "info",
     redis: {
-      port: 6379,
-      host: "redis",
+      port: parseInt(process.env.REDIS_PORT!),
+      host: process.env.REDIS_ENDPOINT as string,
     },
     numGuardians: 1,
     readinessPort: 2000,
