@@ -12,7 +12,7 @@
     },
     {
       "chainId": 5,
-      "emitterAddress": "0x4CE34AF7247A5Cb10dCd6C8af09A3E2AaE830ca5"
+      "emitterAddress": "0xBF103867D30634880a8DAA6553287589fB3d1058"
     }
   ],
   "xDappConfig": {
@@ -21,7 +21,7 @@
         "type": "evm",
         "wormholeChainId": 5,
         "rpc": "https://polygon-mumbai.g.alchemy.com/v2/qBycdF3bdGGhRb8tKel6S3n_iUMr7No1",
-        "privateKey": "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d",
+        "privateKey": "0xcbb9f61d7e1dd39854d831bafc6bdf4ec80726e29ab8ee8fc3e2f792da325641",
         "bridgeAddress": "0x0CBE91CF822c73C2315FB05100C2F714765d5c20"
       },
 
