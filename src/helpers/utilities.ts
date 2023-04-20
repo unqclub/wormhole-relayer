@@ -12,7 +12,7 @@ export const connection = new Connection(
 export const wormholeProgram = () => {
   return new Program<ClubProgram>(
     IDL,
-    "EMssAbHYgBGgxoRNfnv7xuv7tSrKabrVowG6aKUtysWr",
+    "8eZTZga5YrHpJKcWqJRi9mKFDNjcVxPKa6Xz8VPHuKdr",
     new AnchorProvider(connection, new Wallet(Keypair.generate()), {
       commitment: "confirmed",
     })

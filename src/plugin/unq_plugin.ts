@@ -189,6 +189,7 @@ export async function submitOnEnv(
     await storeVaaInDatabase(vaa, WormholeVaaStatus.Succeded, Chain.Ethereum);
   } catch (error) {
     console.log(error);
+
     await storeVaaInDatabase(vaa, WormholeVaaStatus.Failed, Chain.Ethereum);
   }
 }

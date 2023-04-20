@@ -99,10 +99,11 @@ export const retryVaa = async (req: any) => {
           network
         );
 
-        await contract.connect(wallet).parseVM(Buffer.from(vaa), {
+        const tx = await contract.connect(wallet).parseVM(Buffer.from(vaa), {
           gasLimit: 1000000,
         });
 
+        await tx.wait();
         storedVaa.status = WormholeVaaStatus.Succeded;
         console.log(storedVaa);
 
@@ -148,8 +149,6 @@ export const retryVaa = async (req: any) => {
       }
     }
   } catch (error) {
-    console.log(error);
-
     return JSON.stringify({ message: "Failed to store VAA" });
   }
 };

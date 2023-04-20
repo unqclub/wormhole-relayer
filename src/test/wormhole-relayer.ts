@@ -74,7 +74,7 @@ describe("it should create club with treasury on ethereum", async () => {
 
   const clubProgram = new Program<ClubProgram>(
     IDL,
-    "EMssAbHYgBGgxoRNfnv7xuv7tSrKabrVowG6aKUtysWr",
+    "8eZTZga5YrHpJKcWqJRi9mKFDNjcVxPKa6Xz8VPHuKdr",
     new AnchorProvider(SOLANA_RPC_CONNECTION, new NodeWallet(wallet), {})
   );
 
