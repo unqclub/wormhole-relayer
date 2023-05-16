@@ -12,7 +12,7 @@
     },
     {
       "chainId": 5,
-      "emitterAddress": "0x722E570783625781Ac13c7ef1f9B74F599D5Fc15"
+      "emitterAddress": "0xC47250Fa1832DC6e1608Faa7f74812A6a6F447d2"
     }
   ],
   "xDappConfig": {
@@ -34,7 +34,6 @@
       }
     },
     "wormhole": {
-      "restAddress": "http://localhost:7071",
       "spyServiceHost": "guardiand:7073"
     }
   }

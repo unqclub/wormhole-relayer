@@ -1,3 +1,7 @@
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
 const BASE_URL = process.env.API_ENDPOINT;
 
 export const RELAYER_URL = process.env.REACT_APP_RELAYER_ENDPOINT as string;

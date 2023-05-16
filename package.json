@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.9",
+    "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@project-serum/anchor": "^0.26.0",
     "@solana/spl-governance": "^0.0.34",
     "@solana/spl-token": "^0.3.7",
@@ -24,12 +25,14 @@
     "chai": "^4.3.7",
     "child_process": "^1.0.2",
     "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
     "ethers": "^5.7.2",
     "express": "^4.18.2",
     "fs": "^0.0.1-security",
+    "koa": "^2.14.2",
     "mocha": "^10.2.0",
     "node-fetch": "^2.2.6",
-    "relayer-engine": "wormhole-foundation/relayer-engine",
+    "relayer-engine": "github:gabzim/wormhole-relayer#bb152e209a680396e986c8776c388e14774c59f6",
     "short-uuid": "^4.2.2",
     "ts-mocha": "^10.0.0",
     "winston": "^3.8.2"

@@ -29,7 +29,6 @@ export const storeVaaInDatabase = async (
   failedAction?: WormholeAction
 ) => {
   const deserializedVaa = parseVaa(Buffer.from(vaa, "base64"));
-  console.log(deserializedVaa.payload);
 
   let action = failedAction ?? (deserializedVaa.payload[0] as WormholeAction);
 
@@ -49,16 +48,12 @@ export const storeVaaInDatabase = async (
     "solana"
   );
 
-  console.log(memberAddress, "MEMBER");
-
   const dto: IWormholeDto = {
     action: action,
     address: chain === Chain.Ethereum ? address : memberAddress,
     status,
     vaa: vaa.toString("base64"),
   };
-
-  console.log("DTO:", dto);
 
   try {
     await saveVaa(dto);
