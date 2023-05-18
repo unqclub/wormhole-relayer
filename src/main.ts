@@ -27,13 +27,13 @@ export const main = async () => {
   const env = Environment.TESTNET;
   const wApp = new StandardRelayerApp(env, {
     name: "unq-relayer",
-    // redis: {
-    //   host: process.env.REDIS_ENDPOINT!,
-    //   port: Number(process.env.REDIS_PORT!),
-    // },
-    // spyEndpoint: `${process.env.SPY_SERVICE_HOST!}:${
-    //   process.env.SPY_SERVICE_PORT
-    // }`,
+    redis: {
+      host: process.env.REDIS_ENDPOINT!,
+      port: Number(process.env.REDIS_PORT!),
+    },
+    spyEndpoint: `${process.env.SPY_SERVICE_HOST!}:${
+      process.env.SPY_SERVICE_PORT
+    }`,
     workflows: {
       retries: 3,
     },

@@ -7,22 +7,22 @@ services:
       - 6379:6379
     networks:
       - unq_relayer_network
-  # relayer:
-  #   build:
-  #     context: .
-  #   container_name: unq-relayer
-  #   image: wormhole-relayer
-  #   networks:
-  #     - unq_relayer_network
-  #   ports:
-  #     - 3003:3003
-  #     - 5500:5500
-  #     - 443:443
-  #     - 80:80
-  #   command: npm run start
-  #   depends_on:
-  #   - redis
-  #   - guardiand
+  relayer:
+    build:
+      context: .
+    container_name: unq-relayer
+    image: wormhole-relayer
+    networks:
+      - unq_relayer_network
+    ports:
+      - 3003:3003
+      - 5500:5500
+      - 443:443
+      - 80:80
+    command: npm run start
+    depends_on:
+    - redis
+    - guardiand
   guardiand:
     image: ghcr.io/wormhole-foundation/guardiand:main
     platform: linux/amd64
