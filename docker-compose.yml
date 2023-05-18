@@ -1,12 +1,12 @@
 version: '3.7'
 services:
-  # redis:
-  #   container_name: redis
-  #   image: redis:latest
-  #   ports:
-  #     - 6379:6379
-  #   networks:
-  #     - unq_relayer_network
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - 6379:6379
+    networks:
+      - unq_relayer_network
   # relayer:
   #   build:
   #     context: .
