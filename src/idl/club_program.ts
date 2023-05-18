@@ -11,13 +11,13 @@ export type ClubProgram = {
           isSigner: false;
         },
         {
-          name: "ogRealm";
-          isMut: false;
+          name: "realmAuthority";
+          isMut: true;
           isSigner: false;
         },
         {
-          name: "realmAuthority";
-          isMut: true;
+          name: "monkeAdmin";
+          isMut: false;
           isSigner: false;
         },
         {
@@ -283,7 +283,9 @@ export type ClubProgram = {
         {
           name: "crossChainDenominatedCurrency";
           type: {
-            option: "string";
+            option: {
+              defined: "CrossChainDenominatedCurrency";
+            };
           };
         }
       ];
@@ -424,6 +426,16 @@ export type ClubProgram = {
           isSigner: true;
         },
         {
+          name: "monkeAdmins";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "feeWallet";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
@@ -438,8 +450,58 @@ export type ClubProgram = {
         {
           name: "depositAmount";
           type: "u64";
+        },
+        {
+          name: "supportType";
+          type: "u8";
         }
       ];
+    },
+    {
+      name: "leaveClub";
+      accounts: [
+        {
+          name: "realm";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "clubData";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "memberData";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "recipientMemberData";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "recipient";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "voterWeightRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [];
     },
     {
       name: "createClubProposal";
@@ -618,7 +680,7 @@ export type ClubProgram = {
       ];
     },
     {
-      name: "updateMembership";
+      name: "updateMember";
       accounts: [
         {
           name: "realm";
@@ -626,18 +688,8 @@ export type ClubProgram = {
           isSigner: false;
         },
         {
-          name: "realmAuthority";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "splGovernanceProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "memberAddress";
-          isMut: false;
+          name: "clubData";
+          isMut: true;
           isSigner: false;
         },
         {
@@ -646,15 +698,37 @@ export type ClubProgram = {
           isSigner: false;
         },
         {
+          name: "memberAddress";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "memberVoterWeightRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "updaterMemberData";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "payer";
           isMut: true;
           isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
         }
       ];
       args: [
         {
-          name: "isMember";
-          type: "bool";
+          name: "data";
+          type: {
+            defined: "UpdateMemberDto";
+          };
         }
       ];
     },
@@ -698,6 +772,11 @@ export type ClubProgram = {
         },
         {
           name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "whitelistedMembers";
           isMut: false;
           isSigner: false;
         }
@@ -1255,7 +1334,7 @@ export type ClubProgram = {
         },
         {
           name: "proposalMetadata";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -1287,6 +1366,22 @@ export type ClubProgram = {
         {
           name: "withdrawalAmount";
           type: "u64";
+        },
+        {
+          name: "chain";
+          type: "u8";
+        },
+        {
+          name: "crossChainCurrency";
+          type: {
+            option: "bytes";
+          };
+        },
+        {
+          name: "transferDecimals";
+          type: {
+            option: "u8";
+          };
         }
       ];
     },
@@ -1800,6 +1895,11 @@ export type ClubProgram = {
     {
       name: "stakeTokens";
       accounts: [
+        {
+          name: "realm";
+          isMut: false;
+          isSigner: false;
+        },
         {
           name: "clubData";
           isMut: false;
@@ -2927,6 +3027,12 @@ export type ClubProgram = {
           type: {
             option: "publicKey";
           };
+        },
+        {
+          name: "crossChainAddress";
+          type: {
+            option: "bytes";
+          };
         }
       ];
     },
@@ -3033,53 +3139,6 @@ export type ClubProgram = {
       ];
     },
     {
-      name: "changesForFinancialsTrading";
-      accounts: [
-        {
-          name: "treasuryData";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [];
-    },
-    {
-      name: "reallocSpace";
-      accounts: [
-        {
-          name: "accountInfo";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [
-        {
-          name: "additionalBytes";
-          type: "u32";
-        }
-      ];
-    },
-    {
       name: "createTransferProposal";
       accounts: [
         {
@@ -3144,7 +3203,7 @@ export type ClubProgram = {
         },
         {
           name: "proposalMetadata";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -3196,6 +3255,18 @@ export type ClubProgram = {
           name: "transferDestination";
           type: {
             option: "bytes";
+          };
+        },
+        {
+          name: "transferCurrency";
+          type: {
+            option: "bytes";
+          };
+        },
+        {
+          name: "transferDecimals";
+          type: {
+            option: "u8";
           };
         }
       ];
@@ -3395,27 +3466,6 @@ export type ClubProgram = {
           type: "u8";
         }
       ];
-    },
-    {
-      name: "financialRecordReduction";
-      accounts: [
-        {
-          name: "accountInfo";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [];
     },
     {
       name: "updateGovernanceConfig";
@@ -3764,12 +3814,12 @@ export type ClubProgram = {
         },
         {
           name: "treasuryData";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
           name: "governance";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -3794,7 +3844,7 @@ export type ClubProgram = {
         },
         {
           name: "goverenedAccount";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -4244,6 +4294,85 @@ export type ClubProgram = {
       ];
     },
     {
+      name: "addWhitelistings";
+      accounts: [
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "whitelistedMembers";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "monkeAdmins";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "whitelistings";
+          type: {
+            vec: "publicKey";
+          };
+        },
+        {
+          name: "whitelistingAction";
+          type: "u8";
+        }
+      ];
+    },
+    {
+      name: "adMonkeAdmins";
+      accounts: [
+        {
+          name: "monkeAdmins";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "admins";
+          type: {
+            vec: {
+              defined: "MonkeAdminDto";
+            };
+          };
+        },
+        {
+          name: "feeWallet";
+          type: {
+            option: "publicKey";
+          };
+        },
+        {
+          name: "feePercentage";
+          type: {
+            option: "u32";
+          };
+        }
+      ];
+    },
+    {
       name: "reserveRights";
       accounts: [
         {
@@ -4351,11 +4480,453 @@ export type ClubProgram = {
       ];
     },
     {
+      name: "migrateFinancials";
+      accounts: [
+        {
+          name: "clubData";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "payerMemberData";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "treasuryData";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "member";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "memberData";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "financialRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "fundraiseConfig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "splGovernance";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "realm";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "governingTokenMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenOwnerRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "usdcAmount";
+          type: "u64";
+        }
+      ];
+    },
+    {
+      name: "createAddSellPermissionProposal";
+      accounts: [
+        {
+          name: "governance";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "realm";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "governanceAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "realmConfig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "proposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "proposalTransactionAddress";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenOwnerRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "splGovernanceProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "communityTokenMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "voterWeightRecord";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "treasuryData";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "proposalMetadata";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "clubData";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "rent";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "useDeny";
+          type: "bool";
+        },
+        {
+          name: "sellPermission";
+          type: {
+            defined: "SellPermissionDto";
+          };
+        },
+        {
+          name: "maxVotingTime";
+          type: "u32";
+        }
+      ];
+    },
+    {
+      name: "executeSellPermissionTransaction";
+      accounts: [
+        {
+          name: "governance";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "realm";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "realmConfig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "proposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "proposalTransaction";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "splGovernanceProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenOwnerRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "voterWeightRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "proposalMetadata";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "clubData";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "treasuryData";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "memberData";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "clubProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "spcGovernance";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "spcGovernedAccount";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [];
+    },
+    {
+      name: "addStakeConfigToStakeRecord";
+      accounts: [
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "stakeRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "stakeConfig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [];
+    },
+    {
+      name: "addCanLeaveAction";
+      accounts: [
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "clubData";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [];
+    },
+    {
+      name: "addGovernances";
+      accounts: [
+        {
+          name: "clubData";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "treasuryData";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "realm";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "defaultGovernance";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "withdrawalGovernance";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "withdrawalGovernedAccount";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "transferGovernance";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "transferGovernedAccount";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "governanceChangeGovernance";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "governanceChangeGovernedAccount";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "splGovernance";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [];
+    },
+    {
+      name: "updateClubDataForRole";
+      accounts: [
+        {
+          name: "clubData";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        }
+      ];
+      args: [
+        {
+          name: "managerCount";
+          type: "u32";
+        },
+        {
+          name: "memberCount";
+          type: "u32";
+        }
+      ];
+    },
+    {
+      name: "receiveWormholeMessage";
+      accounts: [
+        {
+          name: "clubData";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "vaa";
+          type: "bytes";
+        }
+      ];
+    },
+    {
       name: "postWormholeMessage";
       accounts: [
         {
           name: "clubData";
           isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "treasuryData";
+          isMut: false;
           isSigner: false;
         },
         {
@@ -4419,32 +4990,6 @@ export type ClubProgram = {
         {
           name: "nonce";
           type: "u32";
-        }
-      ];
-    },
-    {
-      name: "receiveWormholeMessage";
-      accounts: [
-        {
-          name: "clubData";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [
-        {
-          name: "vaa";
-          type: "bytes";
         }
       ];
     }
@@ -4526,6 +5071,44 @@ export type ClubProgram = {
           {
             name: "emittedMessageCount";
             type: "u32";
+          }
+        ];
+      };
+    },
+    {
+      name: "whitelistingData";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "whitelistedMembers";
+            type: {
+              vec: "publicKey";
+            };
+          }
+        ];
+      };
+    },
+    {
+      name: "monkeAdmins";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "feeWallet";
+            type: "publicKey";
+          },
+          {
+            name: "feePercentage";
+            type: "u32";
+          },
+          {
+            name: "adminConfigs";
+            type: {
+              vec: {
+                defined: "AdminConfig";
+              };
+            };
           }
         ];
       };
@@ -4661,6 +5244,12 @@ export type ClubProgram = {
           {
             name: "initialAmountOfRights";
             type: "u64";
+          },
+          {
+            name: "crossChainAddress";
+            type: {
+              option: "bytes";
+            };
           }
         ];
       };
@@ -4915,6 +5504,18 @@ export type ClubProgram = {
           {
             name: "createdAt";
             type: "i64";
+          },
+          {
+            name: "crossChainAddress";
+            type: {
+              option: "bytes";
+            };
+          },
+          {
+            name: "crossChainDecimals";
+            type: {
+              option: "u8";
+            };
           }
         ];
       };
@@ -5007,6 +5608,10 @@ export type ClubProgram = {
             type: {
               option: "i64";
             };
+          },
+          {
+            name: "stakeConfig";
+            type: "publicKey";
           }
         ];
       };
@@ -5153,7 +5758,9 @@ export type ClubProgram = {
           {
             name: "crossChainDenominatedCurrency";
             type: {
-              option: "string";
+              option: {
+                defined: "CrossChainDenominatedCurrency";
+              };
             };
           }
         ];
@@ -5413,6 +6020,52 @@ export type ClubProgram = {
       };
     },
     {
+      name: "AdminConfig";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "admin";
+            type: "publicKey";
+          },
+          {
+            name: "permissions";
+            type: {
+              vec: {
+                defined: "MonkeAdminPermission";
+              };
+            };
+          },
+          {
+            name: "status";
+            type: {
+              defined: "MonkeAdminStatus";
+            };
+          }
+        ];
+      };
+    },
+    {
+      name: "MonkeAdminDto";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "user";
+            type: "publicKey";
+          },
+          {
+            name: "permissions";
+            type: "bytes";
+          },
+          {
+            name: "status";
+            type: "u8";
+          }
+        ];
+      };
+    },
+    {
       name: "Allocation";
       type: {
         kind: "struct";
@@ -5533,6 +6186,32 @@ export type ClubProgram = {
       };
     },
     {
+      name: "UpdateMemberDto";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "isMember";
+            type: {
+              option: "bool";
+            };
+          },
+          {
+            name: "status";
+            type: {
+              option: "u8";
+            };
+          },
+          {
+            name: "role";
+            type: {
+              option: "string";
+            };
+          }
+        ];
+      };
+    },
+    {
       name: "Offer";
       type: {
         kind: "struct";
@@ -5609,41 +6288,19 @@ export type ClubProgram = {
       };
     },
     {
-      name: "GovernanceConfig";
+      name: "AddSpcInstructionData";
       type: {
         kind: "struct";
         fields: [
           {
-            name: "voteThresholdPercentage";
+            name: "sellPermission";
             type: {
-              defined: "VoteThresholdPercentage";
+              defined: "SellPermissionDto";
             };
-          },
-          {
-            name: "minCommunityWeightToCreateProposal";
-            type: "u64";
-          },
-          {
-            name: "minTransactionHoldUpTime";
-            type: "u32";
           },
           {
             name: "maxVotingTime";
             type: "u32";
-          },
-          {
-            name: "voteTipping";
-            type: {
-              defined: "VoteTipping";
-            };
-          },
-          {
-            name: "proposalCoolOffTime";
-            type: "u32";
-          },
-          {
-            name: "minCouncilWeightToCreateProposal";
-            type: "u64";
           }
         ];
       };
@@ -5708,6 +6365,22 @@ export type ClubProgram = {
                 defined: "IndividualRight";
               };
             };
+          }
+        ];
+      };
+    },
+    {
+      name: "CrossChainDenominatedCurrency";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "address";
+            type: "string";
+          },
+          {
+            name: "decimals";
+            type: "u8";
           }
         ];
       };
@@ -5785,6 +6458,26 @@ export type ClubProgram = {
       };
     },
     {
+      name: "WithdrawalRecord";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "authority";
+            type: "publicKey";
+          },
+          {
+            name: "hasWithdrawn";
+            type: "bool";
+          },
+          {
+            name: "withdrawnAmount";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
       name: "WormholeDto";
       type: {
         kind: "struct";
@@ -5803,6 +6496,12 @@ export type ClubProgram = {
             name: "creatorAddress";
             type: {
               option: "bytes";
+            };
+          },
+          {
+            name: "withdrawAmount";
+            type: {
+              option: "u64";
             };
           }
         ];
@@ -5874,6 +6573,279 @@ export type ClubProgram = {
       };
     },
     {
+      name: "GovernanceInstruction";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "CreateRealm";
+            fields: [
+              {
+                name: "name";
+                type: "string";
+              },
+              {
+                name: "config_args";
+                type: {
+                  defined: "RealmConfigArgs";
+                };
+              }
+            ];
+          },
+          {
+            name: "DepositGoverningTokens";
+            fields: [
+              {
+                name: "amount";
+                type: "u64";
+              }
+            ];
+          },
+          {
+            name: "WithdrawGoverningTokens";
+            fields: [];
+          },
+          {
+            name: "SetGovernanceDelegate";
+            fields: [
+              {
+                name: "new_governance_delegate";
+                type: {
+                  option: "publicKey";
+                };
+              }
+            ];
+          },
+          {
+            name: "CreateGovernance";
+            fields: [
+              {
+                name: "config";
+                type: {
+                  defined: "GovernanceConfig";
+                };
+              }
+            ];
+          },
+          {
+            name: "CreateProgramGovernance";
+            fields: [
+              {
+                name: "config";
+                type: {
+                  defined: "GovernanceConfig";
+                };
+              },
+              {
+                name: "transfer_upgrade_authority";
+                type: "bool";
+              }
+            ];
+          },
+          {
+            name: "CreateProposal";
+            fields: [
+              {
+                name: "name";
+                type: "string";
+              },
+              {
+                name: "description_link";
+                type: "string";
+              },
+              {
+                name: "vote_type";
+                type: {
+                  defined: "VoteType";
+                };
+              },
+              {
+                name: "options";
+                type: {
+                  vec: "string";
+                };
+              },
+              {
+                name: "use_deny_option";
+                type: "bool";
+              }
+            ];
+          },
+          {
+            name: "AddSignatory";
+            fields: [
+              {
+                name: "signatory";
+                type: "publicKey";
+              }
+            ];
+          },
+          {
+            name: "RemoveSignatory";
+            fields: [
+              {
+                name: "signatory";
+                type: "publicKey";
+              }
+            ];
+          },
+          {
+            name: "InsertTransaction";
+            fields: [
+              {
+                name: "option_index";
+                type: "u8";
+              },
+              {
+                name: "index";
+                type: "u16";
+              },
+              {
+                name: "hold_up_time";
+                type: "u32";
+              },
+              {
+                name: "instructions";
+                type: {
+                  vec: {
+                    defined: "InstructionData";
+                  };
+                };
+              }
+            ];
+          },
+          {
+            name: "RemoveTransaction";
+          },
+          {
+            name: "CancelProposal";
+          },
+          {
+            name: "SignOffProposal";
+          },
+          {
+            name: "CastVote";
+            fields: [
+              {
+                name: "vote";
+                type: {
+                  defined: "Vote";
+                };
+              }
+            ];
+          },
+          {
+            name: "FinalizeVote";
+            fields: [];
+          },
+          {
+            name: "RelinquishVote";
+          },
+          {
+            name: "ExecuteTransaction";
+          },
+          {
+            name: "CreateMintGovernance";
+            fields: [
+              {
+                name: "config";
+                type: {
+                  defined: "GovernanceConfig";
+                };
+              },
+              {
+                name: "transfer_mint_authorities";
+                type: "bool";
+              }
+            ];
+          },
+          {
+            name: "CreateTokenGovernance";
+            fields: [
+              {
+                name: "config";
+                type: {
+                  defined: "GovernanceConfig";
+                };
+              },
+              {
+                name: "transfer_account_authorities";
+                type: "bool";
+              }
+            ];
+          },
+          {
+            name: "SetGovernanceConfig";
+            fields: [
+              {
+                name: "config";
+                type: {
+                  vec: {
+                    defined: "GovernanceConfig";
+                  };
+                };
+              },
+              {
+                name: "seeds";
+                type: {
+                  vec: {
+                    vec: "bytes";
+                  };
+                };
+              }
+            ];
+          },
+          {
+            name: "FlagTransactionError";
+          },
+          {
+            name: "SetRealmAuthority";
+            fields: [
+              {
+                name: "action";
+                type: {
+                  defined: "SetRealmAuthorityAction";
+                };
+              }
+            ];
+          },
+          {
+            name: "SetRealmConfig";
+            fields: [
+              {
+                name: "config_args";
+                type: {
+                  defined: "RealmConfigArgs";
+                };
+              }
+            ];
+          },
+          {
+            name: "CreateTokenOwnerRecord";
+            fields: [];
+          },
+          {
+            name: "UpdateProgramMetadata";
+            fields: [];
+          },
+          {
+            name: "CreateNativeTreasury";
+          },
+          {
+            name: "CreateClubGovernance";
+            fields: [
+              {
+                name: "config";
+                type: {
+                  defined: "GovernanceConfig";
+                };
+              }
+            ];
+          }
+        ];
+      };
+    },
+    {
       name: "KycLocation";
       type: {
         kind: "enum";
@@ -5932,6 +6904,62 @@ export type ClubProgram = {
           },
           {
             name: "CancelProposal";
+          }
+        ];
+      };
+    },
+    {
+      name: "UpdateMembersForRole";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Add";
+          },
+          {
+            name: "Remove";
+          }
+        ];
+      };
+    },
+    {
+      name: "WhitelistingAction";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Add";
+          },
+          {
+            name: "Remove";
+          }
+        ];
+      };
+    },
+    {
+      name: "MonkeAdminPermission";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "CreateClub";
+          },
+          {
+            name: "WhitelistMembers";
+          }
+        ];
+      };
+    },
+    {
+      name: "MonkeAdminStatus";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Accepted";
+          },
+          {
+            name: "Rejected";
           }
         ];
       };
@@ -6027,6 +7055,23 @@ export type ClubProgram = {
           },
           {
             name: "AddReservedRightsToSelf";
+          },
+          {
+            name: "CanLeave";
+          }
+        ];
+      };
+    },
+    {
+      name: "SupportType";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Deposit";
+          },
+          {
+            name: "Withdrawal";
           }
         ];
       };
@@ -6228,6 +7273,9 @@ export type ClubProgram = {
           },
           {
             name: "UpdateRoleConfig";
+          },
+          {
+            name: "AddSellPermission";
           }
         ];
       };
@@ -6305,39 +7353,6 @@ export type ClubProgram = {
           },
           {
             name: "ExecutedSolseaSell";
-          }
-        ];
-      };
-    },
-    {
-      name: "VoteThresholdPercentage";
-      type: {
-        kind: "enum";
-        variants: [
-          {
-            name: "YesVote";
-            fields: ["u8"];
-          },
-          {
-            name: "Quorum";
-            fields: ["u8"];
-          }
-        ];
-      };
-    },
-    {
-      name: "VoteTipping";
-      type: {
-        kind: "enum";
-        variants: [
-          {
-            name: "Strict";
-          },
-          {
-            name: "Early";
-          },
-          {
-            name: "Disabled";
           }
         ];
       };
@@ -6462,10 +7477,13 @@ export type ClubProgram = {
             name: "AddMember";
           },
           {
-            name: "WithdrawFunds";
+            name: "ClaimFunds";
           },
           {
             name: "TransferFunds";
+          },
+          {
+            name: "WithdrawFunds";
           }
         ];
       };
@@ -6486,6 +7504,39 @@ export type ClubProgram = {
               },
               {
                 name: "_member_address";
+                type: {
+                  array: ["u8", 32];
+                };
+              },
+              {
+                name: "_deposit_amount";
+                type: "u32";
+              }
+            ];
+          },
+          {
+            name: "SellSharesPayload";
+            fields: [
+              {
+                name: "_treasury";
+                type: {
+                  array: ["u8", 32];
+                };
+              },
+              {
+                name: "_financial_offer";
+                type: {
+                  array: ["u8", 32];
+                };
+              },
+              {
+                name: "_seller";
+                type: {
+                  array: ["u8", 32];
+                };
+              },
+              {
+                name: "_buyer";
                 type: {
                   array: ["u8", 32];
                 };
@@ -6524,6 +7575,25 @@ export type ClubProgram = {
     }
   ];
   events: [
+    {
+      name: "WhitelistingEvent";
+      fields: [
+        {
+          name: "user";
+          type: {
+            vec: "publicKey";
+          };
+          index: false;
+        },
+        {
+          name: "newStatus";
+          type: {
+            defined: "WhitelistingAction";
+          };
+          index: false;
+        }
+      ];
+    },
     {
       name: "StakingOpenEvent";
       fields: [
@@ -6707,6 +7777,49 @@ export type ClubProgram = {
         {
           name: "realmAddress";
           type: "publicKey";
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "UpdateMemberEvent";
+      fields: [
+        {
+          name: "clubAddress";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "member";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "isMember";
+          type: {
+            option: "bool";
+          };
+          index: false;
+        },
+        {
+          name: "status";
+          type: {
+            option: "u8";
+          };
+          index: false;
+        },
+        {
+          name: "role";
+          type: {
+            option: "string";
+          };
+          index: false;
+        },
+        {
+          name: "hasLeft";
+          type: {
+            option: "bool";
+          };
           index: false;
         }
       ];
@@ -7420,81 +8533,146 @@ export type ClubProgram = {
     },
     {
       code: 6141;
+      name: "WrongAuthorityToCreateMonkeClub";
+      msg: "Wrong Authority to create Monke Club";
+    },
+    {
+      code: 6142;
       name: "CanNotUpdateGovernanceConfig";
       msg: "Can not update governance with proposals in voting state";
     },
     {
-      code: 6142;
+      code: 6143;
       name: "UpdateGovernanceProposalActive";
       msg: "Update governance proposal active";
     },
     {
-      code: 6143;
+      code: 6144;
       name: "InvalidProposalState";
       msg: "Invalid proposal state";
     },
     {
-      code: 6144;
+      code: 6145;
       name: "ChangeClubConfigGovernanceAlredyCreated";
       msg: "Change club config governance alredy created";
     },
     {
-      code: 6145;
+      code: 6146;
       name: "InvalidAuthorityToStartStaking";
       msg: "Invalid role to start staking";
     },
     {
-      code: 6146;
+      code: 6147;
       name: "InvalidDepositRecordState";
       msg: "Invalid DepositRecord State";
     },
     {
-      code: 6147;
+      code: 6148;
+      name: "MemberNotWhitelisted";
+      msg: "Member not added to whitelistings";
+    },
+    {
+      code: 6149;
+      name: "AdminDoesntExist";
+      msg: "Admin does not exist";
+    },
+    {
+      code: 6150;
       name: "ReservedRightsCannotBeOverridden";
       msg: "Reserved rights cannot be overridden";
     },
     {
-      code: 6148;
+      code: 6151;
       name: "ReservedRightsCannotSetAfterFundraise";
       msg: "Reserved rights cannot be set after fundraise";
     },
     {
-      code: 6149;
+      code: 6152;
       name: "WrongTreasuryForClub";
       msg: "Wrong treasury for club";
     },
     {
-      code: 6150;
+      code: 6153;
       name: "NotUniqueIndividualRight";
       msg: "Each pubkey for which individual rights is reserved must be unique";
     },
     {
-      code: 6151;
+      code: 6154;
       name: "IndividualRightNotExists";
       msg: "Individual right for authority does not exist";
     },
     {
-      code: 6152;
+      code: 6155;
       name: "NotEnoughVoteRights";
       msg: "Not enought vote rights to vote on this proposal";
     },
     {
-      code: 6153;
+      code: 6156;
+      name: "InvalidPercentage";
+      msg: "Invalid percentage amount";
+    },
+    {
+      code: 6157;
       name: "CannotAddAndRemoveAllocation";
       msg: "You cannot add and remove allocation at the same time";
     },
     {
-      code: 6154;
+      code: 6158;
       name: "InvalidFundraiseCapAmount";
       msg: "Invalid fundraise cap amount";
     },
     {
-      code: 6155;
+      code: 6159;
+      name: "VotingProposalExists";
+      msg: "Voting proposals exist in this club";
+    },
+    {
+      code: 6160;
+      name: "SellPermissionRangeOverlap";
+      msg: "Sell permission range overlap";
+    },
+    {
+      code: 6161;
+      name: "MaxNumberOfSellPermissionExceeded";
+      msg: "Sell permission number exceeded";
+    },
+    {
+      code: 6162;
+      name: "InvalidFinancialRecord";
+      msg: "Invalid financial record";
+    },
+    {
+      code: 6163;
+      name: "InvalidTreasuryCount";
+      msg: "Invalid treasury count";
+    },
+    {
+      code: 6164;
+      name: "InvalidFinancialPower";
+      msg: "Invalid financial power";
+    },
+    {
+      code: 6165;
+      name: "InvalidWithdrawal";
+      msg: "Invalid withdraw";
+    },
+    {
+      code: 6166;
+      name: "InvalidWithdrawalAmount";
+      msg: "Invalid withdraw amount";
+    },
+    {
+      code: 6167;
+      name: "InvalidTokenOwnerRecord";
+      msg: "Invalid token owner record provided";
+    },
+    {
+      code: 6168;
       name: "InvalidDestinationAddress";
       msg: "Invalid destination address";
     },
     {
-      code: 6156;
+      code: 6169;
       name: "InvalidEmitterChain";
       msg: "Invalid emitter chain";
     }
@@ -7514,13 +8692,13 @@ export const IDL: ClubProgram = {
           isSigner: false,
         },
         {
-          name: "ogRealm",
-          isMut: false,
+          name: "realmAuthority",
+          isMut: true,
           isSigner: false,
         },
         {
-          name: "realmAuthority",
-          isMut: true,
+          name: "monkeAdmin",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -7786,7 +8964,9 @@ export const IDL: ClubProgram = {
         {
           name: "crossChainDenominatedCurrency",
           type: {
-            option: "string",
+            option: {
+              defined: "CrossChainDenominatedCurrency",
+            },
           },
         },
       ],
@@ -7927,6 +9107,16 @@ export const IDL: ClubProgram = {
           isSigner: true,
         },
         {
+          name: "monkeAdmins",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "feeWallet",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "tokenProgram",
           isMut: false,
           isSigner: false,
@@ -7942,7 +9132,57 @@ export const IDL: ClubProgram = {
           name: "depositAmount",
           type: "u64",
         },
+        {
+          name: "supportType",
+          type: "u8",
+        },
       ],
+    },
+    {
+      name: "leaveClub",
+      accounts: [
+        {
+          name: "realm",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "clubData",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "memberData",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "recipientMemberData",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "recipient",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "voterWeightRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
     },
     {
       name: "createClubProposal",
@@ -8121,7 +9361,7 @@ export const IDL: ClubProgram = {
       ],
     },
     {
-      name: "updateMembership",
+      name: "updateMember",
       accounts: [
         {
           name: "realm",
@@ -8129,18 +9369,8 @@ export const IDL: ClubProgram = {
           isSigner: false,
         },
         {
-          name: "realmAuthority",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "splGovernanceProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "memberAddress",
-          isMut: false,
+          name: "clubData",
+          isMut: true,
           isSigner: false,
         },
         {
@@ -8149,15 +9379,37 @@ export const IDL: ClubProgram = {
           isSigner: false,
         },
         {
+          name: "memberAddress",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "memberVoterWeightRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "updaterMemberData",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "payer",
           isMut: true,
           isSigner: true,
         },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
       ],
       args: [
         {
-          name: "isMember",
-          type: "bool",
+          name: "data",
+          type: {
+            defined: "UpdateMemberDto",
+          },
         },
       ],
     },
@@ -8201,6 +9453,11 @@ export const IDL: ClubProgram = {
         },
         {
           name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "whitelistedMembers",
           isMut: false,
           isSigner: false,
         },
@@ -8758,7 +10015,7 @@ export const IDL: ClubProgram = {
         },
         {
           name: "proposalMetadata",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -8790,6 +10047,22 @@ export const IDL: ClubProgram = {
         {
           name: "withdrawalAmount",
           type: "u64",
+        },
+        {
+          name: "chain",
+          type: "u8",
+        },
+        {
+          name: "crossChainCurrency",
+          type: {
+            option: "bytes",
+          },
+        },
+        {
+          name: "transferDecimals",
+          type: {
+            option: "u8",
+          },
         },
       ],
     },
@@ -9303,6 +10576,11 @@ export const IDL: ClubProgram = {
     {
       name: "stakeTokens",
       accounts: [
+        {
+          name: "realm",
+          isMut: false,
+          isSigner: false,
+        },
         {
           name: "clubData",
           isMut: false,
@@ -10431,6 +11709,12 @@ export const IDL: ClubProgram = {
             option: "publicKey",
           },
         },
+        {
+          name: "crossChainAddress",
+          type: {
+            option: "bytes",
+          },
+        },
       ],
     },
     {
@@ -10536,53 +11820,6 @@ export const IDL: ClubProgram = {
       ],
     },
     {
-      name: "changesForFinancialsTrading",
-      accounts: [
-        {
-          name: "treasuryData",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "reallocSpace",
-      accounts: [
-        {
-          name: "accountInfo",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "additionalBytes",
-          type: "u32",
-        },
-      ],
-    },
-    {
       name: "createTransferProposal",
       accounts: [
         {
@@ -10647,7 +11884,7 @@ export const IDL: ClubProgram = {
         },
         {
           name: "proposalMetadata",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -10699,6 +11936,18 @@ export const IDL: ClubProgram = {
           name: "transferDestination",
           type: {
             option: "bytes",
+          },
+        },
+        {
+          name: "transferCurrency",
+          type: {
+            option: "bytes",
+          },
+        },
+        {
+          name: "transferDecimals",
+          type: {
+            option: "u8",
           },
         },
       ],
@@ -10898,27 +12147,6 @@ export const IDL: ClubProgram = {
           type: "u8",
         },
       ],
-    },
-    {
-      name: "financialRecordReduction",
-      accounts: [
-        {
-          name: "accountInfo",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
     },
     {
       name: "updateGovernanceConfig",
@@ -11267,12 +12495,12 @@ export const IDL: ClubProgram = {
         },
         {
           name: "treasuryData",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
           name: "governance",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -11297,7 +12525,7 @@ export const IDL: ClubProgram = {
         },
         {
           name: "goverenedAccount",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -11747,6 +12975,85 @@ export const IDL: ClubProgram = {
       ],
     },
     {
+      name: "addWhitelistings",
+      accounts: [
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "whitelistedMembers",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "monkeAdmins",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "whitelistings",
+          type: {
+            vec: "publicKey",
+          },
+        },
+        {
+          name: "whitelistingAction",
+          type: "u8",
+        },
+      ],
+    },
+    {
+      name: "adMonkeAdmins",
+      accounts: [
+        {
+          name: "monkeAdmins",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "admins",
+          type: {
+            vec: {
+              defined: "MonkeAdminDto",
+            },
+          },
+        },
+        {
+          name: "feeWallet",
+          type: {
+            option: "publicKey",
+          },
+        },
+        {
+          name: "feePercentage",
+          type: {
+            option: "u32",
+          },
+        },
+      ],
+    },
+    {
       name: "reserveRights",
       accounts: [
         {
@@ -11854,11 +13161,453 @@ export const IDL: ClubProgram = {
       ],
     },
     {
+      name: "migrateFinancials",
+      accounts: [
+        {
+          name: "clubData",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "payerMemberData",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "treasuryData",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "member",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "memberData",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "financialRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "fundraiseConfig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "splGovernance",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "realm",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "governingTokenMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenOwnerRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "usdcAmount",
+          type: "u64",
+        },
+      ],
+    },
+    {
+      name: "createAddSellPermissionProposal",
+      accounts: [
+        {
+          name: "governance",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "realm",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "governanceAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "realmConfig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "proposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "proposalTransactionAddress",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenOwnerRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "splGovernanceProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "communityTokenMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "voterWeightRecord",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "treasuryData",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "proposalMetadata",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "clubData",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "rent",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "useDeny",
+          type: "bool",
+        },
+        {
+          name: "sellPermission",
+          type: {
+            defined: "SellPermissionDto",
+          },
+        },
+        {
+          name: "maxVotingTime",
+          type: "u32",
+        },
+      ],
+    },
+    {
+      name: "executeSellPermissionTransaction",
+      accounts: [
+        {
+          name: "governance",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "realm",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "realmConfig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "proposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "proposalTransaction",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "splGovernanceProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenOwnerRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "voterWeightRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "proposalMetadata",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "clubData",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "treasuryData",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "memberData",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "clubProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "spcGovernance",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "spcGovernedAccount",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "addStakeConfigToStakeRecord",
+      accounts: [
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "stakeRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "stakeConfig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "addCanLeaveAction",
+      accounts: [
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "clubData",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "addGovernances",
+      accounts: [
+        {
+          name: "clubData",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "treasuryData",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "realm",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "defaultGovernance",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "withdrawalGovernance",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "withdrawalGovernedAccount",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "transferGovernance",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "transferGovernedAccount",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "governanceChangeGovernance",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "governanceChangeGovernedAccount",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "splGovernance",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "updateClubDataForRole",
+      accounts: [
+        {
+          name: "clubData",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+      ],
+      args: [
+        {
+          name: "managerCount",
+          type: "u32",
+        },
+        {
+          name: "memberCount",
+          type: "u32",
+        },
+      ],
+    },
+    {
+      name: "receiveWormholeMessage",
+      accounts: [
+        {
+          name: "clubData",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "vaa",
+          type: "bytes",
+        },
+      ],
+    },
+    {
       name: "postWormholeMessage",
       accounts: [
         {
           name: "clubData",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "treasuryData",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -11922,32 +13671,6 @@ export const IDL: ClubProgram = {
         {
           name: "nonce",
           type: "u32",
-        },
-      ],
-    },
-    {
-      name: "receiveWormholeMessage",
-      accounts: [
-        {
-          name: "clubData",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "vaa",
-          type: "bytes",
         },
       ],
     },
@@ -12029,6 +13752,44 @@ export const IDL: ClubProgram = {
           {
             name: "emittedMessageCount",
             type: "u32",
+          },
+        ],
+      },
+    },
+    {
+      name: "whitelistingData",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "whitelistedMembers",
+            type: {
+              vec: "publicKey",
+            },
+          },
+        ],
+      },
+    },
+    {
+      name: "monkeAdmins",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "feeWallet",
+            type: "publicKey",
+          },
+          {
+            name: "feePercentage",
+            type: "u32",
+          },
+          {
+            name: "adminConfigs",
+            type: {
+              vec: {
+                defined: "AdminConfig",
+              },
+            },
           },
         ],
       },
@@ -12164,6 +13925,12 @@ export const IDL: ClubProgram = {
           {
             name: "initialAmountOfRights",
             type: "u64",
+          },
+          {
+            name: "crossChainAddress",
+            type: {
+              option: "bytes",
+            },
           },
         ],
       },
@@ -12419,6 +14186,18 @@ export const IDL: ClubProgram = {
             name: "createdAt",
             type: "i64",
           },
+          {
+            name: "crossChainAddress",
+            type: {
+              option: "bytes",
+            },
+          },
+          {
+            name: "crossChainDecimals",
+            type: {
+              option: "u8",
+            },
+          },
         ],
       },
     },
@@ -12510,6 +14289,10 @@ export const IDL: ClubProgram = {
             type: {
               option: "i64",
             },
+          },
+          {
+            name: "stakeConfig",
+            type: "publicKey",
           },
         ],
       },
@@ -12656,7 +14439,9 @@ export const IDL: ClubProgram = {
           {
             name: "crossChainDenominatedCurrency",
             type: {
-              option: "string",
+              option: {
+                defined: "CrossChainDenominatedCurrency",
+              },
             },
           },
         ],
@@ -12916,6 +14701,52 @@ export const IDL: ClubProgram = {
       },
     },
     {
+      name: "AdminConfig",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "admin",
+            type: "publicKey",
+          },
+          {
+            name: "permissions",
+            type: {
+              vec: {
+                defined: "MonkeAdminPermission",
+              },
+            },
+          },
+          {
+            name: "status",
+            type: {
+              defined: "MonkeAdminStatus",
+            },
+          },
+        ],
+      },
+    },
+    {
+      name: "MonkeAdminDto",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "user",
+            type: "publicKey",
+          },
+          {
+            name: "permissions",
+            type: "bytes",
+          },
+          {
+            name: "status",
+            type: "u8",
+          },
+        ],
+      },
+    },
+    {
       name: "Allocation",
       type: {
         kind: "struct",
@@ -13036,6 +14867,32 @@ export const IDL: ClubProgram = {
       },
     },
     {
+      name: "UpdateMemberDto",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "isMember",
+            type: {
+              option: "bool",
+            },
+          },
+          {
+            name: "status",
+            type: {
+              option: "u8",
+            },
+          },
+          {
+            name: "role",
+            type: {
+              option: "string",
+            },
+          },
+        ],
+      },
+    },
+    {
       name: "Offer",
       type: {
         kind: "struct",
@@ -13112,41 +14969,19 @@ export const IDL: ClubProgram = {
       },
     },
     {
-      name: "GovernanceConfig",
+      name: "AddSpcInstructionData",
       type: {
         kind: "struct",
         fields: [
           {
-            name: "voteThresholdPercentage",
+            name: "sellPermission",
             type: {
-              defined: "VoteThresholdPercentage",
+              defined: "SellPermissionDto",
             },
-          },
-          {
-            name: "minCommunityWeightToCreateProposal",
-            type: "u64",
-          },
-          {
-            name: "minTransactionHoldUpTime",
-            type: "u32",
           },
           {
             name: "maxVotingTime",
             type: "u32",
-          },
-          {
-            name: "voteTipping",
-            type: {
-              defined: "VoteTipping",
-            },
-          },
-          {
-            name: "proposalCoolOffTime",
-            type: "u32",
-          },
-          {
-            name: "minCouncilWeightToCreateProposal",
-            type: "u64",
           },
         ],
       },
@@ -13211,6 +15046,22 @@ export const IDL: ClubProgram = {
                 defined: "IndividualRight",
               },
             },
+          },
+        ],
+      },
+    },
+    {
+      name: "CrossChainDenominatedCurrency",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "address",
+            type: "string",
+          },
+          {
+            name: "decimals",
+            type: "u8",
           },
         ],
       },
@@ -13288,6 +15139,26 @@ export const IDL: ClubProgram = {
       },
     },
     {
+      name: "WithdrawalRecord",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "authority",
+            type: "publicKey",
+          },
+          {
+            name: "hasWithdrawn",
+            type: "bool",
+          },
+          {
+            name: "withdrawnAmount",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
       name: "WormholeDto",
       type: {
         kind: "struct",
@@ -13306,6 +15177,12 @@ export const IDL: ClubProgram = {
             name: "creatorAddress",
             type: {
               option: "bytes",
+            },
+          },
+          {
+            name: "withdrawAmount",
+            type: {
+              option: "u64",
             },
           },
         ],
@@ -13377,6 +15254,279 @@ export const IDL: ClubProgram = {
       },
     },
     {
+      name: "GovernanceInstruction",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "CreateRealm",
+            fields: [
+              {
+                name: "name",
+                type: "string",
+              },
+              {
+                name: "config_args",
+                type: {
+                  defined: "RealmConfigArgs",
+                },
+              },
+            ],
+          },
+          {
+            name: "DepositGoverningTokens",
+            fields: [
+              {
+                name: "amount",
+                type: "u64",
+              },
+            ],
+          },
+          {
+            name: "WithdrawGoverningTokens",
+            fields: [],
+          },
+          {
+            name: "SetGovernanceDelegate",
+            fields: [
+              {
+                name: "new_governance_delegate",
+                type: {
+                  option: "publicKey",
+                },
+              },
+            ],
+          },
+          {
+            name: "CreateGovernance",
+            fields: [
+              {
+                name: "config",
+                type: {
+                  defined: "GovernanceConfig",
+                },
+              },
+            ],
+          },
+          {
+            name: "CreateProgramGovernance",
+            fields: [
+              {
+                name: "config",
+                type: {
+                  defined: "GovernanceConfig",
+                },
+              },
+              {
+                name: "transfer_upgrade_authority",
+                type: "bool",
+              },
+            ],
+          },
+          {
+            name: "CreateProposal",
+            fields: [
+              {
+                name: "name",
+                type: "string",
+              },
+              {
+                name: "description_link",
+                type: "string",
+              },
+              {
+                name: "vote_type",
+                type: {
+                  defined: "VoteType",
+                },
+              },
+              {
+                name: "options",
+                type: {
+                  vec: "string",
+                },
+              },
+              {
+                name: "use_deny_option",
+                type: "bool",
+              },
+            ],
+          },
+          {
+            name: "AddSignatory",
+            fields: [
+              {
+                name: "signatory",
+                type: "publicKey",
+              },
+            ],
+          },
+          {
+            name: "RemoveSignatory",
+            fields: [
+              {
+                name: "signatory",
+                type: "publicKey",
+              },
+            ],
+          },
+          {
+            name: "InsertTransaction",
+            fields: [
+              {
+                name: "option_index",
+                type: "u8",
+              },
+              {
+                name: "index",
+                type: "u16",
+              },
+              {
+                name: "hold_up_time",
+                type: "u32",
+              },
+              {
+                name: "instructions",
+                type: {
+                  vec: {
+                    defined: "InstructionData",
+                  },
+                },
+              },
+            ],
+          },
+          {
+            name: "RemoveTransaction",
+          },
+          {
+            name: "CancelProposal",
+          },
+          {
+            name: "SignOffProposal",
+          },
+          {
+            name: "CastVote",
+            fields: [
+              {
+                name: "vote",
+                type: {
+                  defined: "Vote",
+                },
+              },
+            ],
+          },
+          {
+            name: "FinalizeVote",
+            fields: [],
+          },
+          {
+            name: "RelinquishVote",
+          },
+          {
+            name: "ExecuteTransaction",
+          },
+          {
+            name: "CreateMintGovernance",
+            fields: [
+              {
+                name: "config",
+                type: {
+                  defined: "GovernanceConfig",
+                },
+              },
+              {
+                name: "transfer_mint_authorities",
+                type: "bool",
+              },
+            ],
+          },
+          {
+            name: "CreateTokenGovernance",
+            fields: [
+              {
+                name: "config",
+                type: {
+                  defined: "GovernanceConfig",
+                },
+              },
+              {
+                name: "transfer_account_authorities",
+                type: "bool",
+              },
+            ],
+          },
+          {
+            name: "SetGovernanceConfig",
+            fields: [
+              {
+                name: "config",
+                type: {
+                  vec: {
+                    defined: "GovernanceConfig",
+                  },
+                },
+              },
+              {
+                name: "seeds",
+                type: {
+                  vec: {
+                    vec: "bytes",
+                  },
+                },
+              },
+            ],
+          },
+          {
+            name: "FlagTransactionError",
+          },
+          {
+            name: "SetRealmAuthority",
+            fields: [
+              {
+                name: "action",
+                type: {
+                  defined: "SetRealmAuthorityAction",
+                },
+              },
+            ],
+          },
+          {
+            name: "SetRealmConfig",
+            fields: [
+              {
+                name: "config_args",
+                type: {
+                  defined: "RealmConfigArgs",
+                },
+              },
+            ],
+          },
+          {
+            name: "CreateTokenOwnerRecord",
+            fields: [],
+          },
+          {
+            name: "UpdateProgramMetadata",
+            fields: [],
+          },
+          {
+            name: "CreateNativeTreasury",
+          },
+          {
+            name: "CreateClubGovernance",
+            fields: [
+              {
+                name: "config",
+                type: {
+                  defined: "GovernanceConfig",
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
       name: "KycLocation",
       type: {
         kind: "enum",
@@ -13435,6 +15585,62 @@ export const IDL: ClubProgram = {
           },
           {
             name: "CancelProposal",
+          },
+        ],
+      },
+    },
+    {
+      name: "UpdateMembersForRole",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Add",
+          },
+          {
+            name: "Remove",
+          },
+        ],
+      },
+    },
+    {
+      name: "WhitelistingAction",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Add",
+          },
+          {
+            name: "Remove",
+          },
+        ],
+      },
+    },
+    {
+      name: "MonkeAdminPermission",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "CreateClub",
+          },
+          {
+            name: "WhitelistMembers",
+          },
+        ],
+      },
+    },
+    {
+      name: "MonkeAdminStatus",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Accepted",
+          },
+          {
+            name: "Rejected",
           },
         ],
       },
@@ -13530,6 +15736,23 @@ export const IDL: ClubProgram = {
           },
           {
             name: "AddReservedRightsToSelf",
+          },
+          {
+            name: "CanLeave",
+          },
+        ],
+      },
+    },
+    {
+      name: "SupportType",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Deposit",
+          },
+          {
+            name: "Withdrawal",
           },
         ],
       },
@@ -13732,6 +15955,9 @@ export const IDL: ClubProgram = {
           {
             name: "UpdateRoleConfig",
           },
+          {
+            name: "AddSellPermission",
+          },
         ],
       },
     },
@@ -13808,39 +16034,6 @@ export const IDL: ClubProgram = {
           },
           {
             name: "ExecutedSolseaSell",
-          },
-        ],
-      },
-    },
-    {
-      name: "VoteThresholdPercentage",
-      type: {
-        kind: "enum",
-        variants: [
-          {
-            name: "YesVote",
-            fields: ["u8"],
-          },
-          {
-            name: "Quorum",
-            fields: ["u8"],
-          },
-        ],
-      },
-    },
-    {
-      name: "VoteTipping",
-      type: {
-        kind: "enum",
-        variants: [
-          {
-            name: "Strict",
-          },
-          {
-            name: "Early",
-          },
-          {
-            name: "Disabled",
           },
         ],
       },
@@ -13965,10 +16158,13 @@ export const IDL: ClubProgram = {
             name: "AddMember",
           },
           {
-            name: "WithdrawFunds",
+            name: "ClaimFunds",
           },
           {
             name: "TransferFunds",
+          },
+          {
+            name: "WithdrawFunds",
           },
         ],
       },
@@ -13989,6 +16185,39 @@ export const IDL: ClubProgram = {
               },
               {
                 name: "_member_address",
+                type: {
+                  array: ["u8", 32],
+                },
+              },
+              {
+                name: "_deposit_amount",
+                type: "u32",
+              },
+            ],
+          },
+          {
+            name: "SellSharesPayload",
+            fields: [
+              {
+                name: "_treasury",
+                type: {
+                  array: ["u8", 32],
+                },
+              },
+              {
+                name: "_financial_offer",
+                type: {
+                  array: ["u8", 32],
+                },
+              },
+              {
+                name: "_seller",
+                type: {
+                  array: ["u8", 32],
+                },
+              },
+              {
+                name: "_buyer",
                 type: {
                   array: ["u8", 32],
                 },
@@ -14027,6 +16256,25 @@ export const IDL: ClubProgram = {
     },
   ],
   events: [
+    {
+      name: "WhitelistingEvent",
+      fields: [
+        {
+          name: "user",
+          type: {
+            vec: "publicKey",
+          },
+          index: false,
+        },
+        {
+          name: "newStatus",
+          type: {
+            defined: "WhitelistingAction",
+          },
+          index: false,
+        },
+      ],
+    },
     {
       name: "StakingOpenEvent",
       fields: [
@@ -14210,6 +16458,49 @@ export const IDL: ClubProgram = {
         {
           name: "realmAddress",
           type: "publicKey",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "UpdateMemberEvent",
+      fields: [
+        {
+          name: "clubAddress",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "member",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "isMember",
+          type: {
+            option: "bool",
+          },
+          index: false,
+        },
+        {
+          name: "status",
+          type: {
+            option: "u8",
+          },
+          index: false,
+        },
+        {
+          name: "role",
+          type: {
+            option: "string",
+          },
+          index: false,
+        },
+        {
+          name: "hasLeft",
+          type: {
+            option: "bool",
+          },
           index: false,
         },
       ],
@@ -14923,81 +17214,146 @@ export const IDL: ClubProgram = {
     },
     {
       code: 6141,
+      name: "WrongAuthorityToCreateMonkeClub",
+      msg: "Wrong Authority to create Monke Club",
+    },
+    {
+      code: 6142,
       name: "CanNotUpdateGovernanceConfig",
       msg: "Can not update governance with proposals in voting state",
     },
     {
-      code: 6142,
+      code: 6143,
       name: "UpdateGovernanceProposalActive",
       msg: "Update governance proposal active",
     },
     {
-      code: 6143,
+      code: 6144,
       name: "InvalidProposalState",
       msg: "Invalid proposal state",
     },
     {
-      code: 6144,
+      code: 6145,
       name: "ChangeClubConfigGovernanceAlredyCreated",
       msg: "Change club config governance alredy created",
     },
     {
-      code: 6145,
+      code: 6146,
       name: "InvalidAuthorityToStartStaking",
       msg: "Invalid role to start staking",
     },
     {
-      code: 6146,
+      code: 6147,
       name: "InvalidDepositRecordState",
       msg: "Invalid DepositRecord State",
     },
     {
-      code: 6147,
+      code: 6148,
+      name: "MemberNotWhitelisted",
+      msg: "Member not added to whitelistings",
+    },
+    {
+      code: 6149,
+      name: "AdminDoesntExist",
+      msg: "Admin does not exist",
+    },
+    {
+      code: 6150,
       name: "ReservedRightsCannotBeOverridden",
       msg: "Reserved rights cannot be overridden",
     },
     {
-      code: 6148,
+      code: 6151,
       name: "ReservedRightsCannotSetAfterFundraise",
       msg: "Reserved rights cannot be set after fundraise",
     },
     {
-      code: 6149,
+      code: 6152,
       name: "WrongTreasuryForClub",
       msg: "Wrong treasury for club",
     },
     {
-      code: 6150,
+      code: 6153,
       name: "NotUniqueIndividualRight",
       msg: "Each pubkey for which individual rights is reserved must be unique",
     },
     {
-      code: 6151,
+      code: 6154,
       name: "IndividualRightNotExists",
       msg: "Individual right for authority does not exist",
     },
     {
-      code: 6152,
+      code: 6155,
       name: "NotEnoughVoteRights",
       msg: "Not enought vote rights to vote on this proposal",
     },
     {
-      code: 6153,
+      code: 6156,
+      name: "InvalidPercentage",
+      msg: "Invalid percentage amount",
+    },
+    {
+      code: 6157,
       name: "CannotAddAndRemoveAllocation",
       msg: "You cannot add and remove allocation at the same time",
     },
     {
-      code: 6154,
+      code: 6158,
       name: "InvalidFundraiseCapAmount",
       msg: "Invalid fundraise cap amount",
     },
     {
-      code: 6155,
+      code: 6159,
+      name: "VotingProposalExists",
+      msg: "Voting proposals exist in this club",
+    },
+    {
+      code: 6160,
+      name: "SellPermissionRangeOverlap",
+      msg: "Sell permission range overlap",
+    },
+    {
+      code: 6161,
+      name: "MaxNumberOfSellPermissionExceeded",
+      msg: "Sell permission number exceeded",
+    },
+    {
+      code: 6162,
+      name: "InvalidFinancialRecord",
+      msg: "Invalid financial record",
+    },
+    {
+      code: 6163,
+      name: "InvalidTreasuryCount",
+      msg: "Invalid treasury count",
+    },
+    {
+      code: 6164,
+      name: "InvalidFinancialPower",
+      msg: "Invalid financial power",
+    },
+    {
+      code: 6165,
+      name: "InvalidWithdrawal",
+      msg: "Invalid withdraw",
+    },
+    {
+      code: 6166,
+      name: "InvalidWithdrawalAmount",
+      msg: "Invalid withdraw amount",
+    },
+    {
+      code: 6167,
+      name: "InvalidTokenOwnerRecord",
+      msg: "Invalid token owner record provided",
+    },
+    {
+      code: 6168,
       name: "InvalidDestinationAddress",
       msg: "Invalid destination address",
     },
     {
-      code: 6156,
+      code: 6169,
       name: "InvalidEmitterChain",
       msg: "Invalid emitter chain",
     },

@@ -51,6 +51,7 @@ import {
   tryNativeToUint8Array,
 } from "@certusone/wormhole-sdk";
 import { connection, wormholeProgram } from "../../helpers/utilities";
+import { BN } from "bn.js";
 
 export const initOgRealm = async (
   name: string,
@@ -164,7 +165,6 @@ export const createClub = async (
       .createClub(clubName, 2, buffers, "Owner", "Member", null)
       .accounts({
         realm: realmAddress,
-        ogRealm: realm,
         realmAuthority: payer.publicKey,
         communityTokenHoldingAddress: communityTokenHolding,
         realmConfig: realmConfigAddress,
@@ -274,14 +274,10 @@ export const createGovernance = async (
   );
 
   const createGovernanceIX = await program.methods
-    .createTreasuryGovernance(
-      86400 * 7 + 1,
-      55,
-      [],
-      { ethereum: {} },
-      null,
-      ethDenomCurr
-    )
+    .createTreasuryGovernance(86400 * 7 + 1, 55, [], { ethereum: {} }, null, {
+      address: "",
+      decimals: 12,
+    })
     .accounts({
       treasuryData: treasuryDataPda,
       clubData: clubAddress,
@@ -551,7 +547,9 @@ export const createTransferProposal = async (
       new anchor.BN(transferAmount),
       Buffer.from(
         hexToUint8Array(tryNativeToHexString(destinationAddress, "ethereum"))
-      )
+      ),
+      Buffer.from(""),
+      18
     )
     .accounts({
       governance,

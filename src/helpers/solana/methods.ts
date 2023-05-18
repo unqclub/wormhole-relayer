@@ -57,20 +57,27 @@ export const getInstructionRemainingAccounts = async (
 
   switch (action) {
     case EvmToSolanaAction.Deposit: {
-      const rawClubAddress = payload.subarray(1, 33);
-      clubData = new PublicKey(tryUint8ArrayToNative(rawClubAddress, "solana"));
+      const rewTreasuryAddress = payload.subarray(1, 33);
+      const treasuryDataAddress = new PublicKey(
+        tryUint8ArrayToNative(rewTreasuryAddress, "solana")
+      );
+      const treasuryData = await program.account.treasuryData.fetch(
+        treasuryDataAddress
+      );
+
+      clubData = treasuryData.clubData;
       const rawMemberAddress = payload.subarray(33, 65);
       const memberPubkey = new PublicKey(
         tryUint8ArrayToNative(rawMemberAddress, "solana")
       );
 
-      const treasuryIndex = 1;
-      let treasuryIndexBuffer = Buffer.alloc(4);
-      treasuryIndexBuffer.writeUint8(treasuryIndex);
-      const [treasuryPda] = PublicKey.findProgramAddressSync(
-        [unqClubSeed, clubData.toBuffer(), treasurySeed, treasuryIndexBuffer],
-        program.programId
-      );
+      // const treasuryIndex = 1;
+      // let treasuryIndexBuffer = Buffer.alloc(4);
+      // treasuryIndexBuffer.writeUint8(treasuryIndex);
+      // const [treasuryPda] = PublicKey.findProgramAddressSync(
+      //   [unqClubSeed, clubData.toBuffer(), treasurySeed, treasuryIndexBuffer],
+      //   program.programId
+      // );
 
       const [memberData] = PublicKey.findProgramAddressSync(
         [
@@ -81,23 +88,23 @@ export const getInstructionRemainingAccounts = async (
         ],
         program.programId
       );
-      const [treasuryDataPda] = PublicKey.findProgramAddressSync(
-        [unqClubSeed, treasuryPda.toBuffer(), treasuryDataSeed],
-        program.programId
-      );
+      // const [treasuryDataPda] = PublicKey.findProgramAddressSync(
+      //   [unqClubSeed, treasuryPda.toBuffer(), treasuryDataSeed],
+      //   program.programId
+      // );
 
-      const treasuryDataAcc = await program.account.treasuryData.fetch(
-        treasuryDataPda
-      );
+      // const treasuryDataAcc = await program.account.treasuryData.fetch(
+      //   treasuryDataPda
+      // );
 
-      const fundraiseCount = treasuryDataAcc.fundraiseCount;
+      const fundraiseCount = treasuryData.fundraiseCount;
       const fundraiseCountBuffer = Buffer.alloc(4);
       fundraiseCountBuffer.writeUint32LE(fundraiseCount, 0);
 
       const [fundraiseConfigAddress] = await PublicKey.findProgramAddress(
         [
           unqClubSeed,
-          treasuryDataPda.toBuffer(),
+          treasuryDataAddress.toBuffer(),
           fundraiseCfgSeed,
           fundraiseCountBuffer,
         ],
@@ -107,7 +114,7 @@ export const getInstructionRemainingAccounts = async (
       [financialRecord] = PublicKey.findProgramAddressSync(
         [
           unqClubSeed,
-          treasuryDataPda.toBuffer(),
+          treasuryDataAddress.toBuffer(),
           financialRecordSeed,
           memberPubkey.toBuffer(),
         ],
@@ -123,7 +130,7 @@ export const getInstructionRemainingAccounts = async (
         {
           isSigner: false,
           isWritable: true,
-          pubkey: treasuryDataPda,
+          pubkey: treasuryDataAddress,
         },
         {
           isSigner: false,
