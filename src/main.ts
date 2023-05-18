@@ -31,6 +31,7 @@ export const main = async () => {
       host: process.env.REDIS_ENDPOINT!,
       port: Number(process.env.REDIS_PORT!),
     },
+
     spyEndpoint: `${process.env.SPY_SERVICE_HOST!}:${
       process.env.SPY_SERVICE_PORT
     }`,
