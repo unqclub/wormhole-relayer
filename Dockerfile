@@ -14,6 +14,6 @@ EXPOSE 5500
 
 EXPOSE 3000
 
-RUN npm run start
+#RUN npm run start
 
 

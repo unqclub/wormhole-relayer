@@ -64,6 +64,7 @@ export const main = async () => {
   });
 
 
+
   wApp.use(async (err, ctx, next) => {
     ctx.logger.error("error middleware triggered");
   });
