@@ -17,6 +17,8 @@ services:
     ports:
       - 3003:3003
       - 5500:5500
+      - 443:443
+      - 80:80
     command: npm run start
     depends_on:
     - redis
@@ -31,7 +33,7 @@ services:
       - unq_relayer_network
 
 networks:
- unq_relayer_network:
+  unq_relayer_network:
     driver: bridge
 
  
