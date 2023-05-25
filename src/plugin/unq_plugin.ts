@@ -171,10 +171,12 @@ export async function submitOnEnv(
       f: async (wallet) => {
         wallet.wallet;
 
+        const gas = await network.getGasPrice();
+
         return wormholeUnqContract
           .connect(wallet.wallet)
           .parseVM(Buffer.from(vaa, "base64"), {
-            gasLimit: 1000000,
+            gasLimit: gas.toNumber(),
           });
       },
     });
