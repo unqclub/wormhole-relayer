@@ -175,9 +175,7 @@ export async function submitOnEnv(
 
         return wormholeUnqContract
           .connect(wallet.wallet)
-          .parseVM(Buffer.from(vaa, "base64"), {
-            gasLimit: gas.toNumber(),
-          });
+          .parseVM(Buffer.from(vaa, "base64"));
       },
     });
     await tx.wait();
