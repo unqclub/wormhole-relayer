@@ -71,14 +71,6 @@ export const getInstructionRemainingAccounts = async (
         tryUint8ArrayToNative(rawMemberAddress, "solana")
       );
 
-      // const treasuryIndex = 1;
-      // let treasuryIndexBuffer = Buffer.alloc(4);
-      // treasuryIndexBuffer.writeUint8(treasuryIndex);
-      // const [treasuryPda] = PublicKey.findProgramAddressSync(
-      //   [unqClubSeed, clubData.toBuffer(), treasurySeed, treasuryIndexBuffer],
-      //   program.programId
-      // );
-
       const [memberData] = PublicKey.findProgramAddressSync(
         [
           unqClubSeed,
@@ -88,14 +80,6 @@ export const getInstructionRemainingAccounts = async (
         ],
         program.programId
       );
-      // const [treasuryDataPda] = PublicKey.findProgramAddressSync(
-      //   [unqClubSeed, treasuryPda.toBuffer(), treasuryDataSeed],
-      //   program.programId
-      // );
-
-      // const treasuryDataAcc = await program.account.treasuryData.fetch(
-      //   treasuryDataPda
-      // );
 
       const fundraiseCount = treasuryData.fundraiseCount;
       const fundraiseCountBuffer = Buffer.alloc(4);

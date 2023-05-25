@@ -6503,6 +6503,12 @@ export type ClubProgram = {
             type: {
               option: "u64";
             };
+          },
+          {
+            name: "decimals";
+            type: {
+              option: "u8";
+            };
           }
         ];
       };
@@ -7477,13 +7483,16 @@ export type ClubProgram = {
             name: "AddMember";
           },
           {
-            name: "ClaimFunds";
+            name: "WithdrawFunds";
           },
           {
             name: "TransferFunds";
           },
           {
-            name: "WithdrawFunds";
+            name: "ExecutedWithdrawal";
+          },
+          {
+            name: "ClaimFunds";
           }
         ];
       };
@@ -15185,6 +15194,12 @@ export const IDL: ClubProgram = {
               option: "u64",
             },
           },
+          {
+            name: "decimals",
+            type: {
+              option: "u8",
+            },
+          },
         ],
       },
     },
@@ -16158,13 +16173,16 @@ export const IDL: ClubProgram = {
             name: "AddMember",
           },
           {
-            name: "ClaimFunds",
+            name: "WithdrawFunds",
           },
           {
             name: "TransferFunds",
           },
           {
-            name: "WithdrawFunds",
+            name: "ExecutedWithdrawal",
+          },
+          {
+            name: "ClaimFunds",
           },
         ],
       },

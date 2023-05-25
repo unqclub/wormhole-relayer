@@ -8,22 +8,24 @@ export interface IWormholeDto {
   address: string;
   vaa: string;
   status: WormholeVaaStatus;
-  action: WormholeAction;
+  action: SolanaWormholeAction | EthereumWormholeAction;
 }
 
 export enum WormholeVaaStatus {
   Failed,
   Succeded,
 }
-export enum WormholeAction {
+export enum SolanaWormholeAction {
   CreateTreasury,
   AddMember,
   WithdrawFunds,
   TransferFunds,
+}
+
+export enum EthereumWormholeAction {
   Deposit,
   SellShares,
 }
-
 export const saveVaa = (vaa: IWormholeDto) => {
   return post(WORMHOLE_VAAS + SAVE_VAA, vaa);
 };

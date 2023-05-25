@@ -11,9 +11,10 @@ import {
   IWormholeDto,
   saveVaa,
   VAA,
-  WormholeAction,
-  WormholeVaaStatus,
+  SolanaWormholeAction,
+  EthereumWormholeAction,
   WORMHOLE_VAAS,
+  WormholeVaaStatus,
 } from "../api/wormhole-vaa/wormhole-vaa";
 import pluginConf from "../../unqPluginConfig.json";
 import treasuryAbi from "../abi/WormholeUnq.json";
@@ -25,18 +26,11 @@ import { get, post } from "../api/request.api";
 export const storeVaaInDatabase = async (
   vaa: any,
   status: WormholeVaaStatus,
-  chain: Chain,
-  failedAction?: WormholeAction
+  chain: Chain
 ) => {
   const deserializedVaa = parseVaa(Buffer.from(vaa, "base64"));
 
-  let action = failedAction ?? (deserializedVaa.payload[0] as WormholeAction);
-
-  if (chain === Chain.Solana && action === WormholeAction.CreateTreasury) {
-    action = WormholeAction.Deposit;
-  } else if (chain === Chain.Solana && action === WormholeAction.AddMember) {
-    action = WormholeAction.SellShares;
-  }
+  let action = deserializedVaa.payload[0];
 
   const address = tryUint8ArrayToNative(
     deserializedVaa.payload.subarray(5, 37),
