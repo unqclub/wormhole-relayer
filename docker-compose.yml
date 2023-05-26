@@ -24,7 +24,7 @@ services:
     - redis
     - guardiand
   guardiand:
-    image: ghcr.io/wormhole-foundation/2.17.1:main
+    image: ghcr.io/wormhole-foundation/guardiand:v2.17.1
     platform: linux/amd64
     ports:
       - 7073:7073
