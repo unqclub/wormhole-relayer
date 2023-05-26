@@ -6381,6 +6381,10 @@ export type ClubProgram = {
           {
             name: "decimals";
             type: "u8";
+          },
+          {
+            name: "encodedAddress";
+            type: "bytes";
           }
         ];
       };
@@ -15071,6 +15075,10 @@ export const IDL: ClubProgram = {
           {
             name: "decimals",
             type: "u8",
+          },
+          {
+            name: "encodedAddress",
+            type: "bytes",
           },
         ],
       },
