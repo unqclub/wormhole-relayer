@@ -4926,7 +4926,7 @@ export type ClubProgram = {
         },
         {
           name: "treasuryData";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -7487,7 +7487,7 @@ export type ClubProgram = {
             name: "AddMember";
           },
           {
-            name: "WithdrawFunds";
+            name: "ClaimFunds";
           },
           {
             name: "TransferFunds";
@@ -7496,7 +7496,7 @@ export type ClubProgram = {
             name: "ExecutedWithdrawal";
           },
           {
-            name: "ClaimFunds";
+            name: "WithdrawFunds";
           }
         ];
       };
@@ -13620,7 +13620,7 @@ export const IDL: ClubProgram = {
         },
         {
           name: "treasuryData",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -16181,7 +16181,7 @@ export const IDL: ClubProgram = {
             name: "AddMember",
           },
           {
-            name: "WithdrawFunds",
+            name: "ClaimFunds",
           },
           {
             name: "TransferFunds",
@@ -16190,7 +16190,7 @@ export const IDL: ClubProgram = {
             name: "ExecutedWithdrawal",
           },
           {
-            name: "ClaimFunds",
+            name: "WithdrawFunds",
           },
         ],
       },
