@@ -32,6 +32,8 @@ export const storeVaaInDatabase = async (
 
   let action = deserializedVaa.payload[0];
 
+  console.log("ACTION:", action);
+
   const address = tryUint8ArrayToNative(
     deserializedVaa.payload.subarray(5, 37),
     "solana"
