@@ -8,11 +8,11 @@
   "spyServiceFilters": [
     {
       "chainId": 1,
-      "emitterAddress": "8eZTZga5YrHpJKcWqJRi9mKFDNjcVxPKa6Xz8VPHuKdr"
+      "emitterAddress": "XDGC4gEP4uSKZd2Tjco876ieBPkWNhEUEQRaE3Rb6Bs"
     },
     {
       "chainId": 5,
-      "emitterAddress": "0x15714616A6D9E7BB827f7414A185C8ceC25cED83"
+      "emitterAddress": "0xC3EF703262a77E98B83cfFACECA28606867537B2"
     }
   ],
   "xDappConfig": {
