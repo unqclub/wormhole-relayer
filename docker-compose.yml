@@ -13,7 +13,7 @@ services:
     container_name: unq-relayer
     image: wormhole-relayer
     networks:
-      - unq_relayer_network
+      - unq-relayer-network
     ports:
       - 3003:3003
       - 5500:5500

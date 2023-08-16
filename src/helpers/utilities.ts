@@ -11,7 +11,7 @@ export const connection = new Connection(
 export const wormholeProgram = () => {
   return new Program<ClubProgram>(
     IDL,
-    "8eZTZga5YrHpJKcWqJRi9mKFDNjcVxPKa6Xz8VPHuKdr",
+    pluginConf.spyServiceFilters[0].emitterAddress,
     new AnchorProvider(connection, new Wallet(Keypair.generate()), {
       commitment: "confirmed",
     })
